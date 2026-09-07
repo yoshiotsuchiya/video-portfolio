@@ -67,7 +67,7 @@ const CONTACT_EMAIL = 'hiroshi.design109@gmail.com';
 1. 設定済みの実績サイトのリンク先を確認する。
 2. 設定済みの連絡先を確認する。
 3. プロフィールや提供サービスを確認する。
-4. `index.html` の `og:url` と `og:image` にある `https://example.com/` を公開URLに変える。
+4. 公開URLは `https://hiroshi-design.com/` に設定済みです。ドメインを変える場合はcanonical・OGP・CNAMEを更新してください。
 
 SNS共有画像は `assets/ogp.png`（1200×630px）です。例えば公開先が `https://yourname.github.io/portfolio/` なら、画像URLは `https://yourname.github.io/portfolio/assets/ogp.png` になります。title、description、OGP、faviconの設定は `<head>` にまとまっています。
 
@@ -128,3 +128,7 @@ NetlifyやCloudflare Pagesにも、同じ静的ファイルを配置できます
 Chatwork ID・所在地の詳細・メールアドレスの直接表示は削除しています。メールアドレスはメール作成機能の宛先としてのみ設定しています。移行元Notionの公開内容は変更していません。
 
 代表者名は本人指定のローマ字表記「YOSHIO TSUCHIYA」に統一しています。写真の代替テキストも同じ表記です。
+
+## 現在の公開先
+
+https://hiroshi-design.com/ （GitHub Pages＋独自ドメイン）。`CNAME` は独自ドメインを指定するファイルです。更新時も削除せず、公開フォルダーの直下に置いてください。手元の編集はGitHubへアップロードするまで公開サイトに反映されません。
