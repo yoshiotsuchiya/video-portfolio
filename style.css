@@ -304,3 +304,13 @@ footer p, footer>a:last-child { font-size: 10px; letter-spacing: .09em; color: v
 
 /* 代表者名のローマ字表記 */
 .bio .profile-name { font-size: clamp(23px, 2.8vw, 38px); letter-spacing: .035em; font-weight: 500; }
+
+/* 即レス・即対応をトップの主役として大きく表示 */
+.response-tag { display: flex; align-items: center; gap: clamp(10px, 1.1vw, 18px); width: fit-content; max-width: 100%; font-size: clamp(36px, 4.2vw, 64px); line-height: 1.3; letter-spacing: -.035em; font-weight: 700; padding-bottom: 18px; margin-bottom: 23px; border-bottom-color: var(--gold); }
+.response-tag .response-word { color: var(--gold); font-weight: 700; white-space: nowrap; }
+.response-tag .response-cross { font-size: .6em; font-weight: 300; color: var(--gold); }
+.hero-lead { font-size: clamp(28px, 2.8vw, 42px); line-height: 1.5; }
+@media (max-width: 760px) {
+  .response-tag { font-size: clamp(32px, 9vw, 52px); gap: 11px; padding-bottom: 15px; margin-bottom: 21px; }
+  .hero-lead { font-size: 29px; }
+}
