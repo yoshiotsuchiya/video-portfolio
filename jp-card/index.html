@@ -207,6 +207,92 @@ body{background:#1a1340;min-height:100%}
 .vc-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:#f7f5fc;margin-bottom:8px;cursor:pointer;font-size:14px;font-weight:600;color:#1a1a1a}
 .vc-item.active{background:#5b2a86;color:#fff}
 .vc-item .vc-sub{font-size:11px;font-weight:400;opacity:0.65;margin-left:auto;white-space:nowrap}
+/* VOCAB TEST */
+.menu-btn.vt-btn{background:linear-gradient(120deg,rgba(94,242,255,0.22),rgba(96,165,250,0.28));border-color:rgba(150,220,255,0.5)}
+.icon-vt{background:rgba(96,165,250,0.45)}
+.vt-intro{flex:1;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;color:#fff;display:flex}
+.vt-intro h2{font-size:26px;font-weight:800}
+.vt-badge{font-size:52px}
+.vt-line{font-size:15px;font-weight:700;color:#ffe27a}
+.vt-rules{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:16px;padding:12px 16px;text-align:left;font-size:13px;line-height:1.7;width:100%;max-width:420px;color:rgba(255,255,255,0.9)}
+.vt-intro .done-btn{max-width:420px}
+.vt-q{flex:1;flex-direction:column;gap:12px}
+.vt-timer-wrap{height:6px;background:rgba(255,255,255,0.15);border-radius:99px;overflow:hidden}
+.vt-timer{height:100%;width:100%;background:linear-gradient(90deg,#5ef2ff,#60a5fa);border-radius:99px}
+.vt-timer.low{background:linear-gradient(90deg,#fb7185,#f97316)}
+.vt-word{flex:1;max-height:340px;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#fff;border-radius:24px;box-shadow:0 10px 36px rgba(0,0,0,0.25);padding:20px}
+.vt-ko{font-size:44px;font-weight:800;color:#1a1a1a;text-align:center;word-break:keep-all}
+.vt-listen{font-size:18px;font-weight:800;color:#5b2a86}
+.vt-replay{border:none;background:#f3f0fb;color:#5b2a86;font-weight:700;font-size:14px;padding:10px 18px;border-radius:99px;cursor:pointer}
+.vt-replay.big{font-size:17px;padding:16px 26px;background:#5b2a86;color:#fff}
+.vt-choices{display:flex;flex-direction:column;gap:9px}
+.vt-choice{padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.14);backdrop-filter:blur(10px);color:#fff;font-size:15px;font-weight:700;text-align:left;cursor:pointer;transition:transform .08s}
+.vt-choice:active{transform:scale(0.98)}
+.vt-choice.vt-dk{background:transparent;border-style:dashed;color:rgba(255,255,255,0.7);text-align:center;font-weight:600}
+.vt-choice.ok{background:#4ade80;border-color:#4ade80;color:#0b3d1f}
+.vt-choice.ng{background:#fb7185;border-color:#fb7185;color:#4a0b16}
+.vt-choice:disabled{cursor:default}
+#vresult{gap:12px;align-items:center;text-align:center;color:#fff;overflow-y:auto;scrollbar-width:none}
+#vresult::-webkit-scrollbar{display:none}
+#vresult>*{flex-shrink:0;width:100%;max-width:440px}
+#vresult h2{font-size:22px;font-weight:800;margin-top:6px}
+.vt-ring{width:170px!important;height:170px;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p)*1%),rgba(255,255,255,0.15) 0);display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 6px 18px rgba(0,0,0,0.3))}
+.vt-ring-in{width:140px;height:140px;border-radius:50%;background:#2b1a5e;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.vt-pct{font-size:46px;font-weight:900;line-height:1}
+.vt-pct small{font-size:18px;margin-left:2px}
+.vt-lvl{font-size:13px;font-weight:800;margin-top:4px}
+.vt-sub{font-size:14px;font-weight:700;color:rgba(255,255,255,0.85)}
+.vt-delta{font-size:13px;color:#ffe27a;font-weight:700}
+.vt-card{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:16px;padding:12px 14px;text-align:left}
+.vt-bar{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px}
+.vt-bl{min-width:62px;color:rgba(255,255,255,0.85)}
+.vt-bt{flex:1;height:10px;background:rgba(255,255,255,0.15);border-radius:99px;overflow:hidden}
+.vt-bf{height:100%;border-radius:99px}
+.vt-bar b{min-width:40px;text-align:right}
+.vt-known{margin-top:8px;font-size:15px;font-weight:800;color:#fff}
+.vt-detail{font-size:12px;color:rgba(255,255,255,0.65);margin-top:4px}
+.vt-h4{font-size:13px;font-weight:700;margin-bottom:6px;color:rgba(255,255,255,0.85)}
+.vt-hrow{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-top:1px solid rgba(255,255,255,0.1)}
+.vt-hrow:first-of-type{border-top:none}
+.vt-note{font-size:11px;color:rgba(255,255,255,0.6);line-height:1.5}
+#vresult .done-btn{max-width:440px}
+
+.vt-btn .meta{display:block}
+.vt-best{color:#ffe27a;font-weight:700}
+.vt-lastm{opacity:0.75}
+.vt-mini{display:block;height:5px;background:rgba(255,255,255,0.18);border-radius:99px;margin-top:6px;overflow:hidden;width:100%}
+.vt-mini-f{display:block;height:100%;border-radius:99px}
+.vt-btn>div:last-child{flex:1}
+.vt-newbest{font-size:16px;font-weight:900;color:#1a1340;background:linear-gradient(90deg,#ffe27a,#ffb3d9);padding:7px 16px;border-radius:99px;width:auto!important;box-shadow:0 4px 16px rgba(255,226,122,0.45);animation:vtpop .6s ease}
+@keyframes vtpop{0%{transform:scale(0.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+
+.vt-q{padding-bottom:max(env(safe-area-inset-bottom),12px)}
+.vt-q .vt-word{margin-bottom:auto}
+.vt-choices{margin-top:auto;padding-bottom:18px}
+
+/* 応援イラスト */
+.vt-q .vt-word{flex:0 0 auto;height:min(30vh,240px);max-height:none;margin-bottom:0}
+.vt-cheer{flex:1 1 0;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none}
+.vt-cheer img{max-height:100%;max-width:70%;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,0.18));animation:vtcheer 2.4s ease-in-out infinite}
+@keyframes vtcheer{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.vt-choices{margin-top:0}
+@media (max-height:720px){.vt-q .vt-word{height:22vh;min-height:120px}.vt-ko{font-size:36px}.vt-choice{padding:11px 14px}.vt-choices{gap:7px}}
+
+.vt-ring-mini{width:46px!important;height:46px!important;border-radius:50%!important;background:conic-gradient(var(--c) calc(var(--p)*1%),rgba(255,255,255,0.18) 0)!important;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))}
+.vt-ring-mini>span{width:36px;height:36px;border-radius:50%;background:#3a2477;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+.vt-ring-mini small{font-size:8px;margin-left:1px}
+/* 日本語版調整 */
+.vt-ko{font-family:-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;font-size:42px}
+.vt-reading{font-size:16px;color:#9a8f80;font-weight:600}
+.vt-word{background:#fffdf8}
+.vt-listen{color:#14234a}
+.vt-replay{background:#fbeeee;color:#b3202e}
+.vt-replay.big{background:#c41e2e;color:#fff}
+.vt-ring-in{background:#14234a!important}
+.vt-ring-mini>span{background:#1a2b57!important}
+.vt-choice{font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+#vresult{padding-bottom:40px}
+
 /* ===== 和風テーマ ===== */
 #bg{background:radial-gradient(ellipse at 50% 0%,rgba(232,194,124,0.10),transparent 60%),linear-gradient(180deg,#14234a 0%,#1a2b57 55%,#22346a 100%)}
 #home::before{display:none}
@@ -280,6 +366,10 @@ html,body{height:100%;height:100dvh}
   <button class="menu-btn game-btn" onclick="startGame()">
     <div class="icon icon-game">🎮</div>
     <div><div id="game-menu-title">게임</div><div class="meta" id="game-menu-meta">단어 슈팅</div></div>
+  </button>
+  <button class="menu-btn vt-btn" onclick="openVTest()">
+    <div class="icon icon-vt">📊</div>
+    <div><div id="vt-menu-title">단어력 테스트</div><div class="meta" id="vt-menu-meta">50문제로 지금의 단어력 체크</div></div>
   </button>
   <button class="menu-btn" onclick="startNew()">
     <div class="icon icon-new">▶</div>
@@ -387,6 +477,21 @@ html,body{height:100%;height:100dvh}
   <button class="done-btn white" id="go-retry" onclick="startGame()"></button>
   <button class="done-btn white" id="go-home" onclick="goHome()"></button>
 </div>
+<div id="vtest" class="screen">
+  <div id="vt-intro" class="vt-intro"></div>
+  <div id="vt-q" class="vt-q" style="display:none">
+    <div class="top-bar">
+      <button class="back-btn" onclick="quitVTest()">✕</button>
+      <div class="prog-wrap"><div class="prog-fill" id="vt-prog" style="width:0%"></div></div>
+      <div class="prog-label" id="vt-count">1/50</div>
+    </div>
+    <div class="vt-timer-wrap"><div class="vt-timer" id="vt-timer"></div></div>
+    <div class="vt-word" id="vt-word"></div>
+    <div class="vt-cheer"><img src="data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22520%22 height=%22480%22 viewBox=%220 0 520 480%22%3E%3Cdefs%3E%3CradialGradient id=%22skin%22 cx=%2250%25%22 cy=%2242%25%22 r=%2260%25%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff1e6%22/%3E%3Cstop offset=%220.75%22 stop-color=%22%23ffe0cc%22/%3E%3Cstop offset=%221%22 stop-color=%22%23f7c9ad%22/%3E%3C/radialGradient%3E%3ClinearGradient id=%22hair%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%236b4330%22/%3E%3Cstop offset=%220.6%22 stop-color=%22%234a2c1f%22/%3E%3Cstop offset=%221%22 stop-color=%22%233a2118%22/%3E%3C/linearGradient%3E%3ClinearGradient id=%22hairHi%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%220%22%3E%3Cstop offset=%220%22 stop-color=%22%23c98f6a%22 stop-opacity=%220%22/%3E%3Cstop offset=%220.5%22 stop-color=%22%23e8b48c%22 stop-opacity=%220.85%22/%3E%3Cstop offset=%221%22 stop-color=%22%23c98f6a%22 stop-opacity=%220%22/%3E%3C/linearGradient%3E%3CradialGradient id=%22iris%22 cx=%2250%25%22 cy=%2262%25%22 r=%2262%25%22%3E%3Cstop offset=%220%22 stop-color=%22%23e9a86a%22/%3E%3Cstop offset=%220.45%22 stop-color=%22%239a5a2e%22/%3E%3Cstop offset=%221%22 stop-color=%22%233b1f12%22/%3E%3C/radialGradient%3E%3CradialGradient id=%22blush%22 cx=%2250%25%22 cy=%2250%25%22 r=%2250%25%22%3E%3Cstop offset=%220%22 stop-color=%22%23ff8fa8%22 stop-opacity=%220.7%22/%3E%3Cstop offset=%221%22 stop-color=%22%23ff8fa8%22 stop-opacity=%220%22/%3E%3C/radialGradient%3E%3ClinearGradient id=%22jacket%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23ffe9a0%22/%3E%3Cstop offset=%221%22 stop-color=%22%23ffd25a%22/%3E%3C/linearGradient%3E%3ClinearGradient id=%22skirt%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23ff86ab%22/%3E%3Cstop offset=%221%22 stop-color=%22%23ec4f84%22/%3E%3C/linearGradient%3E%3Cfilter id=%22soft%22 x=%22-20%25%22 y=%22-20%25%22 width=%22140%25%22 height=%22140%25%22%3E%3CfeDropShadow dx=%220%22 dy=%226%22 stdDeviation=%228%22 flood-color=%22%233b1a5e%22 flood-opacity=%220.22%22/%3E%3C/filter%3E%3Cg id=%22eye%22%3E%3C%21-- %E7%99%BD%E7%9B%AE --%3E%3Cellipse cx=%220%22 cy=%226%22 rx=%2227%22 ry=%2232%22 fill=%22%23ffffff%22/%3E%3C%21-- %E7%9E%B3 --%3E%3Cellipse cx=%220%22 cy=%228%22 rx=%2224%22 ry=%2229%22 fill=%22url(%23iris)%22/%3E%3Cellipse cx=%220%22 cy=%228%22 rx=%2211%22 ry=%2213%22 fill=%22%2324110a%22/%3E%3C%21-- %E7%9E%B3%E3%81%AE%E4%B8%8B%E3%81%AE%E6%98%8E%E3%82%8B%E3%81%84%E5%8F%8D%E5%B0%84 --%3E%3Cpath d=%22M-18 18 Q 0 34 18 18 Q 10 28 0 29 Q -10 28 -18 18 Z%22 fill=%22%23ffd2a1%22 opacity=%220.75%22/%3E%3C%21-- %E3%82%AD%E3%83%A9%E3%82%AD%E3%83%A9%E3%81%AE%E3%83%8F%E3%82%A4%E3%83%A9%E3%82%A4%E3%83%88 --%3E%3Cellipse cx=%22-8%22 cy=%22-6%22 rx=%229%22 ry=%2210%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%2211%22 cy=%2214%22 r=%224.5%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%22-12%22 cy=%2216%22 r=%222.4%22 fill=%22%23ffffff%22 opacity=%220.9%22/%3E%3Ccircle cx=%227%22 cy=%22-12%22 r=%222%22 fill=%22%23ffffff%22 opacity=%220.9%22/%3E%3C%21-- %E3%81%BE%E3%81%B6%E3%81%9F%EF%BC%88%E4%B8%8A%EF%BC%89%E3%81%A8%E3%81%BE%E3%81%A4%E6%AF%9B --%3E%3Cpath d=%22M-29 -4 Q -2 -40 29 -4%22 stroke=%22%232b140c%22 stroke-width=%226%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M26 -9 l 8 -6 M 29 -3 l 8 -3%22 stroke=%22%232b140c%22 stroke-width=%223%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3Cg id=%22star4%22%3E%3Cpath d=%22M0 -40 C 5 -9 9 -5 40 0 C 9 5 5 9 0 40 C -5 9 -9 5 -40 0 C -9 -5 -5 -9 0 -40 Z%22/%3E%3C/g%3E%3C/defs%3E%3Cg filter=%22url(%23soft)%22 transform=%22translate(10 0)%22%3E%3C%21-- %E5%BE%8C%E3%82%8D%E9%AB%AA --%3E%3Cellipse cx=%22240%22 cy=%22200%22 rx=%22122%22 ry=%22118%22 fill=%22url(%23hair)%22/%3E%3C%21-- %E9%A0%AD%E3%81%AE%E4%B8%8A%E3%81%AE%E3%81%8A%E3%81%A0%E3%82%93%E3%81%94%EF%BC%8B%E8%B5%A4%E3%81%84%E3%83%AA%E3%83%9C%E3%83%B3 --%3E%3Ccircle cx=%22240%22 cy=%2270%22 r=%2230%22 fill=%22url(%23hair)%22/%3E%3Cpath d=%22M226 62 Q 240 50 254 60%22 stroke=%22%23c98f6a%22 stroke-width=%224%22 fill=%22none%22 opacity=%220.7%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M240 96 l -30 -14 l 2 26 z M240 96 l 30 -14 l -2 26 z%22 fill=%22%23ff4d7a%22/%3E%3Ccircle cx=%22240%22 cy=%2296%22 r=%228%22 fill=%22%23e8336a%22/%3E%3C%21-- %E3%81%8B%E3%82%89%E3%81%A0%EF%BC%9A%E3%83%81%E3%83%9E --%3E%3Cpath d=%22M190 330 Q 240 320 290 330 Q 318 400 312 452 Q 240 466 168 452 Q 162 400 190 330 Z%22 fill=%22url(%23skirt)%22/%3E%3Cpath d=%22M206 350 Q 200 410 194 452 M240 348 L 240 460 M274 350 Q 280 410 286 452%22 stroke=%22%23d93b6f%22 stroke-width=%223%22 fill=%22none%22 opacity=%220.4%22 stroke-linecap=%22round%22/%3E%3C%21-- %E4%B8%A1%E8%85%95%EF%BC%88%E3%83%81%E3%83%A7%E3%82%B4%E3%83%AA%E3%81%AE%E4%B8%8B%E3%81%8B%E3%82%89%EF%BC%89 --%3E%3Cg fill=%22none%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M204 322 Q 154 352 150 322 Q 148 306 156 296%22 stroke=%22%23ff6060%22 stroke-width=%2227%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M204 322 Q 154 352 150 322 Q 148 306 156 296%22 stroke=%22%23ffd04a%22 stroke-width=%2227%22 stroke-dasharray=%226 24%22 stroke-dashoffset=%220%22/%3E%3Cpath d=%22M204 322 Q 154 352 150 322 Q 148 306 156 296%22 stroke=%22%234cc38a%22 stroke-width=%2227%22 stroke-dasharray=%226 24%22 stroke-dashoffset=%22-6%22/%3E%3Cpath d=%22M204 322 Q 154 352 150 322 Q 148 306 156 296%22 stroke=%22%234a9bff%22 stroke-width=%2227%22 stroke-dasharray=%226 24%22 stroke-dashoffset=%22-12%22/%3E%3Cpath d=%22M204 322 Q 154 352 150 322 Q 148 306 156 296%22 stroke=%22%23ff8ad2%22 stroke-width=%2227%22 stroke-dasharray=%226 24%22 stroke-dashoffset=%22-18%22/%3E%3C/g%3E%3Cg fill=%22none%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M276 322 Q 326 352 330 322 Q 332 306 324 296%22 stroke=%22%23ff6060%22 stroke-width=%2227%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M276 322 Q 326 352 330 322 Q 332 306 324 296%22 stroke=%22%23ffd04a%22 stroke-width=%2227%22 stroke-dasharray=%226 24%22 stroke-dashoffset=%220%22/%3E%3Cpath d=%22M276 322 Q 326 352 330 322 Q 332 306 324 296%22 stroke=%22%234cc38a%22 stroke-width=%2227%22 stroke-dasharray=%226 24%22 stroke-dashoffset=%22-6%22/%3E%3Cpath d=%22M276 322 Q 326 352 330 322 Q 332 306 324 296%22 stroke=%22%234a9bff%22 stroke-width=%2227%22 stroke-dasharray=%226 24%22 stroke-dashoffset=%22-12%22/%3E%3Cpath d=%22M276 322 Q 326 352 330 322 Q 332 306 324 296%22 stroke=%22%23ff8ad2%22 stroke-width=%2227%22 stroke-dasharray=%226 24%22 stroke-dashoffset=%22-18%22/%3E%3C/g%3E%3C%21-- %E3%83%81%E3%83%A7%E3%82%B4%E3%83%AA --%3E%3Cpath d=%22M196 318 Q 200 304 220 300 L 260 300 Q 280 304 284 318 L 290 344 Q 240 356 190 344 Z%22 fill=%22url(%23jacket)%22/%3E%3Cpath d=%22M224 300 L 240 330 L 256 300%22 stroke=%22%23ffffff%22 stroke-width=%227%22 fill=%22none%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M241 332 Q 230 338 226 346 Q 236 344 241 338 Z%22 fill=%22%23ec4f84%22/%3E%3Cpath d=%22M241 332 Q 236 356 230 376%22 stroke=%22%23ec4f84%22 stroke-width=%227%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M244 332 Q 250 352 256 368%22 stroke=%22%23ec4f84%22 stroke-width=%227%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%22242%22 cy=%22333%22 r=%226%22 fill=%22%23d93b6f%22/%3E%3C%21-- %E9%A1%94%EF%BC%88%E5%A4%A7%E3%81%8D%E3%81%8F%E4%B8%B8%E3%81%8F%E3%80%81%E8%B5%A4%E3%81%A1%E3%82%83%E3%82%93%E3%81%A3%E3%81%BD%E3%81%84%EF%BC%89 --%3E%3Cellipse cx=%22240%22 cy=%22200%22 rx=%22104%22 ry=%22100%22 fill=%22url(%23skin)%22/%3E%3C%21-- %E8%80%B3 --%3E%3Cellipse cx=%22138%22 cy=%22212%22 rx=%2214%22 ry=%2218%22 fill=%22%23ffd9c2%22/%3E%3Cellipse cx=%22342%22 cy=%22212%22 rx=%2214%22 ry=%2218%22 fill=%22%23ffd9c2%22/%3E%3C%21-- %E5%89%8D%E9%AB%AA%EF%BC%88%E6%AF%9B%E6%9D%9F%EF%BC%89 --%3E%3Cpath d=%22M132 196 Q 130 104 240 100 Q 350 104 348 196%0A             Q 336 158 318 146 Q 314 170 300 176 Q 296 150 278 140 Q 270 168 252 170 Q 250 146 240 138%0A             Q 228 150 226 170 Q 208 168 200 140 Q 184 150 180 176 Q 166 170 162 146 Q 144 158 132 196 Z%22 fill=%22url(%23hair)%22/%3E%3C%21-- %E9%AB%AA%E3%81%AE%E3%83%84%E3%83%A4%EF%BC%88%E5%A4%A9%E4%BD%BF%E3%81%AE%E8%BC%AA%EF%BC%89 --%3E%3Cpath d=%22M168 128 Q 240 96 312 128%22 stroke=%22url(%23hairHi)%22 stroke-width=%229%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M192 152 Q 196 140 204 134 M 276 134 Q 286 140 290 152%22 stroke=%22%238a5a40%22 stroke-width=%222.5%22 fill=%22none%22 stroke-linecap=%22round%22 opacity=%220.8%22/%3E%3C%21-- %E7%9C%89 --%3E%3Cpath d=%22M176 180 Q 190 172 206 176%22 stroke=%22%237a4a33%22 stroke-width=%223%22 fill=%22none%22 stroke-linecap=%22round%22 opacity=%220.6%22/%3E%3Cpath d=%22M274 176 Q 290 172 304 180%22 stroke=%22%237a4a33%22 stroke-width=%223%22 fill=%22none%22 stroke-linecap=%22round%22 opacity=%220.6%22/%3E%3C%21-- %E7%9B%AE --%3E%3Cuse href=%22%23eye%22 x=%22-192%22 y=%22216%22 transform=%22scale(-1 1)%22/%3E%3Cuse href=%22%23eye%22 x=%22288%22 y=%22216%22/%3E%3C%21-- %E3%81%BB%E3%81%A3%E3%81%BA --%3E%3Cellipse cx=%22170%22 cy=%22252%22 rx=%2230%22 ry=%2218%22 fill=%22url(%23blush)%22/%3E%3Cellipse cx=%22310%22 cy=%22252%22 rx=%2230%22 ry=%2218%22 fill=%22url(%23blush)%22/%3E%3Cpath d=%22M160 250 l 6 -6 M 170 252 l 6 -6 M 300 250 l 6 -6 M 310 252 l 6 -6%22 stroke=%22%23ff7a9a%22 stroke-width=%222%22 stroke-linecap=%22round%22 opacity=%220.6%22/%3E%3C%21-- %E9%BC%BB --%3E%3Cellipse cx=%22240%22 cy=%22246%22 rx=%223%22 ry=%222%22 fill=%22%23f0a98a%22/%3E%3C%21-- %E5%8F%A3%EF%BC%88%E5%A4%A7%E3%81%8D%E3%81%8F%E9%96%8B%E3%81%91%E3%81%A6%E7%AC%91%E3%81%86%EF%BC%89 --%3E%3Cpath d=%22M216 262 Q 240 300 264 262 Q 240 270 216 262 Z%22 fill=%22%23b8324f%22/%3E%3Cpath d=%22M226 280 Q 240 296 254 280 Q 240 274 226 280 Z%22 fill=%22%23ff8aa0%22/%3E%3Cpath d=%22M220 263 Q 240 270 260 263 L 258 268 Q 240 274 222 268 Z%22 fill=%22%23ffffff%22/%3E%3C%21-- %E4%B8%A1%E6%89%8B%E3%82%B0%E3%83%BC%EF%BC%88%E9%A1%94%E3%82%88%E3%82%8A%E6%89%8B%E5%89%8D%EF%BC%89 --%3E%3Ccircle cx=%22156%22 cy=%22288%22 r=%2219%22 fill=%22url(%23skin)%22/%3E%3Cpath d=%22M144 284 Q 156 273 168 284%22 stroke=%22%23e5a989%22 stroke-width=%222.5%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M145 293 L 167 293%22 stroke=%22%23e5a989%22 stroke-width=%222%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%22324%22 cy=%22288%22 r=%2219%22 fill=%22url(%23skin)%22/%3E%3Cpath d=%22M312 284 Q 324 273 336 284%22 stroke=%22%23e5a989%22 stroke-width=%222.5%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M313 293 L 335 293%22 stroke=%22%23e5a989%22 stroke-width=%222%22 stroke-linecap=%22round%22/%3E%3C/g%3E%3C%21-- %E5%90%B9%E3%81%8D%E5%87%BA%E3%81%97 --%3E%3Cg transform=%22translate(350 26)%22%3E%3Cpath d=%22M14 8 Q 2 8 2 22 L 2 70 Q 2 84 16 84 L 30 84 L 14 108 L 52 84 L 142 84 Q 156 84 156 70 L 156 22 Q 156 8 142 8 Z%22 fill=%22%23ffffff%22 stroke=%22%23ff4d7a%22 stroke-width=%223.5%22/%3E%3Ctext x=%2279%22 y=%2258%22 text-anchor=%22middle%22 font-family=%22Hiragino Sans, Hiragino Kaku Gothic ProN, Noto Sans JP, Apple SD Gothic Neo, Noto Sans CJK KR, Noto Sans KR, sans-serif%22 font-weight=%22900%22 font-size=%2225%22 fill=%22%23ff4d7a%22%3E%E3%81%8C%E3%82%93%E3%81%B0%E3%81%A3%E3%81%A6%21%3C/text%3E%3C/g%3E%3C%21-- %E3%81%8D%E3%82%89%E3%81%8D%E3%82%89 --%3E%3Cuse href=%22%23star4%22 transform=%22translate(118 92) scale(0.45)%22 fill=%22%23ffd04a%22/%3E%3Cuse href=%22%23star4%22 transform=%22translate(392 196) scale(0.35)%22 fill=%22%23ff8ad2%22/%3E%3Cuse href=%22%23star4%22 transform=%22translate(96 330) scale(0.3)%22 fill=%22%235ef2ff%22/%3E%3Ccircle cx=%22420%22 cy=%22150%22 r=%225%22 fill=%22%23ffd04a%22/%3E%3C/svg%3E" alt=""></div>
+    <div class="vt-choices" id="vt-choices"></div>
+  </div>
+</div>
+<div id="vresult" class="screen"></div>
 </div>
 <script>
 // ===================== 単語データ / 状態 =====================
@@ -429,6 +534,7 @@ function updateHome(){
   document.getElementById("all-meta").textContent=f.filter(w=>!st.perfect[K(w)]).length+"개 (완벽한 단어 제외)";
   document.getElementById("perfect-meta").textContent=cnt(st.perfect)+"개";
   if(typeof updateGameMenu==="function") updateGameMenu();
+  if(typeof updateVTMenu==="function") updateVTMenu();
 }
 
 // ===================== 単語カード =====================
@@ -1253,6 +1359,175 @@ function drawGame(){
     }
   });
 })();
+
+// ===================== 単語力テスト（日本語版・簡易） =====================
+const VT_KEY="jpcard_vtest_v1";
+const VT_TOTAL=50,VT_TIME=5,VT_TIME_LISTEN=7,VT_LISTEN_RATE=0.2;
+const VT_LV=["N5","N4"];   // 易→難
+const VT_T={menu:"단어력 테스트",meta:"50문제로 지금의 단어력 체크",
+  introTitle:"단어력 테스트",introLine:"JLPT {n} 라인까지의 단어에서 50문제",
+  intro1:"4지선다로 올바른 뜻을 고르세요",intro2:"1문제 5초. 모르면 「모르겠다」를 누르는 게 더 정확하게 측정됩니다",intro3:"🎧 문제는 소리만 나옵니다 (자동 재생)",
+  start:"시작",dontKnow:"모르겠다",listen:"🎧 듣고 답하기",replay:"다시 듣기",tapPlay:"탭해서 듣기",
+  resTitle:"테스트 결과",readiness:"JLPT {n} 라인 단어 준비도",line:"{n} 라인",known:"이 앱 단어 중 약 {k}개 습득 추정",
+  detail:"정답 {r} / 오답 {w} / 모르겠다·시간 초과 {s}",listenAcc:"듣기 문제 {a}/{b}",
+  prev:"지난번보다 {d}",first:"첫 기록입니다",missed:"틀리거나 모른 단어",added:"↑ 복습 목록에 추가했습니다",
+  note:"※ 간이 테스트입니다. 이 앱에 수록된 기본 단어만으로 측정한 참고용 결과이며, JLPT 합격 가능성을 나타내지 않습니다. 찍어서 맞힌 분은 빼고 계산합니다.",
+  again:"다시 보기",home:"홈으로",history:"지금까지의 기록",few:"단어가 부족합니다",
+  lv:["보강 필요","조금 더","합격 라인","충분"],bestLine:"최고 {p}% ({n} 라인)",lastShort:"지난번 {p}%",newBest:"🏆 최고 기록 갱신!",bestIs:"최고 {p}%"};
+function vtt(k){return VT_T[k];}
+function loadVT(){try{return JSON.parse(localStorage.getItem(VT_KEY))||[];}catch(e){return [];}}
+function saveVT(h){try{localStorage.setItem(VT_KEY,JSON.stringify(h.slice(-50)));}catch(e){}}
+const VT={};
+function vtTarget(){return currentTopik==="N5"?"N5":"N4";}   // N4・전체 → N4 라인
+function vtPool(lv){return WORDS.filter(w=>w.lv===lv);}
+function vtChoices(w){
+  const m=meaningOf(w),picked=[];
+  const base=x=>x!==w&&x.w!==w.w&&x.r!==w.r&&meaningOf(x)!==m&&!similarMeaning(meaningOf(x),m)
+    &&!picked.some(p=>meaningOf(p)===meaningOf(x)||similarMeaning(meaningOf(p),meaningOf(x)));
+  for(const list of [WORDS.filter(x=>x.pos===w.pos),WORDS]){
+    for(const x of shuffle(list)){if(picked.length>=3)break;if(base(x))picked.push(x);}
+    if(picked.length>=3)break;
+  }
+  return shuffle([w,...picked]);
+}
+function updateVTMenu(){
+  const t=document.getElementById("vt-menu-title");if(!t)return;
+  const tg=vtTarget();
+  const h=loadVT().filter(r=>r.target===tg);const last=h[h.length-1];
+  const meta=document.getElementById("vt-menu-meta");
+  const icon=document.querySelector(".vt-btn .icon");
+  if(!last){meta.textContent=vtt("meta");if(icon){icon.className="icon icon-vt";icon.innerHTML="📊";icon.removeAttribute("style");}return;}
+  const best=Math.max(...h.map(r=>r.ready));
+  const c=best>=90?"#4ade80":best>=75?"#ffd76a":best>=55?"#fb923c":"#fb7185";
+  meta.innerHTML=`<span class="vt-best">🏆 ${vtt("bestLine").replace("{n}",tg).replace("{p}",best)}</span>${h.length>1?` <span class="vt-lastm">${vtt("lastShort").replace("{p}",last.ready)}</span>`:""}`;
+  if(icon){icon.className="icon vt-ring-mini";icon.style.setProperty("--p",best);icon.style.setProperty("--c",c);icon.innerHTML=`<span>${best}<small>%</small></span>`;}
+}
+function openVTest(){
+  const intro=document.getElementById("vt-intro");
+  intro.innerHTML=`<div class="vt-badge">📊</div>
+    <h2>${vtt("introTitle")}</h2>
+    <p class="vt-line">${vtt("introLine").replace("{n}",vtTarget())}</p>
+    <div class="vt-rules"><p>✓ ${vtt("intro1")}</p><p>⏱ ${vtt("intro2")}</p><p>${vtt("intro3")}</p></div>
+    <button class="done-btn white" onclick="startVTest()">${vtt("start")}</button>
+    <button class="done-btn danger" onclick="goHome()">${vtt("home")}</button>`;
+  intro.style.display="flex";document.getElementById("vt-q").style.display="none";
+  showScreen("vtest");
+}
+function startVTest(){
+  try{audioUnlock();}catch(e){}
+  const tg=vtTarget();const lvs=VT_LV.slice(0,VT_LV.indexOf(tg)+1);const N=lvs.length;
+  const qs=[];
+  lvs.forEach((lv,i)=>{
+    const n=Math.floor(VT_TOTAL/N)+(i<VT_TOTAL%N?1:0);
+    const pool=shuffle(vtPool(lv));
+    if(pool.length<4){alert(vtt("few"));throw 0;}
+    pool.slice(0,n).forEach(w=>qs.push({w,lv}));
+  });
+  const order=shuffle(qs);
+  const nListen=Math.round(order.length*VT_LISTEN_RATE);
+  order.forEach((q,i)=>{q.listen=i<nListen;q.choices=vtChoices(q.w);});
+  Object.assign(VT,{tg,lvs,qs:shuffle(order),i:-1,res:[],timer:null,t0:0,answered:false});
+  document.getElementById("vt-intro").style.display="none";
+  document.getElementById("vt-q").style.display="flex";
+  vtNext();
+}
+function vtWordHtml(w){return `<div class="vt-ko">${esc(w.w)}</div>`;}
+function vtNext(){
+  clearInterval(VT.timer);
+  VT.i++;
+  if(VT.i>=VT.qs.length){vtFinish();return;}
+  const q=VT.qs[VT.i];VT.answered=false;
+  document.getElementById("vt-prog").style.width=(VT.i/VT.qs.length*100)+"%";
+  document.getElementById("vt-count").textContent=(VT.i+1)+"/"+VT.qs.length;
+  const word=document.getElementById("vt-word");
+  VT.started=false;
+  if(q.listen){
+    word.innerHTML=`<div class="vt-listen">${vtt("listen")}</div><button class="vt-replay" id="vt-play" onclick="vtSpeak(true)">🔊 ${vtt("replay")}</button>`;
+    vtSpeak(false);
+    const qi=VT.i;
+    setTimeout(()=>{if(VT.i===qi&&!VT.started&&!VT.answered){const b=document.getElementById("vt-play");if(b){b.classList.add("big");b.textContent="🔊 "+vtt("tapPlay");}}},900);
+  }else{
+    word.innerHTML=vtWordHtml(q.w);
+  }
+  const box=document.getElementById("vt-choices");box.innerHTML="";
+  q.choices.forEach((c,ci)=>{
+    const b=document.createElement("button");b.className="vt-choice";b.textContent=meaningOf(c);
+    b.onclick=()=>vtAnswer(ci);box.appendChild(b);
+  });
+  const dk=document.createElement("button");dk.className="vt-choice vt-dk";dk.textContent=vtt("dontKnow");dk.onclick=()=>vtAnswer(-1);box.appendChild(dk);
+  const bar=document.getElementById("vt-timer");bar.style.width="100%";bar.classList.remove("low");
+  if(!q.listen)vtStartTimer();
+}
+function vtStartTimer(){
+  if(VT.started||VT.answered)return;VT.started=true;
+  const q=VT.qs[VT.i];const limit=q.listen?VT_TIME_LISTEN:VT_TIME;
+  VT.t0=performance.now();
+  const bar=document.getElementById("vt-timer");
+  clearInterval(VT.timer);
+  VT.timer=setInterval(()=>{
+    const el=(performance.now()-VT.t0)/1000,left=Math.max(0,1-el/limit);
+    bar.style.width=(left*100)+"%";bar.classList.toggle("low",left<0.35);
+    if(el>=limit)vtAnswer(-2);
+  },50);
+}
+function vtSpeak(byTap){
+  const q=VT.qs[VT.i];if(!q)return;
+  try{const u=jaUtter(q.w.r,0.9);u.onstart=()=>vtStartTimer();speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
+  if(byTap){const b=document.getElementById("vt-play");if(b){b.classList.remove("big");b.textContent="🔊 "+vtt("replay");}setTimeout(vtStartTimer,600);}
+}
+function vtAnswer(ci){
+  if(VT.answered)return;VT.answered=true;clearInterval(VT.timer);
+  const q=VT.qs[VT.i];
+  const correctIdx=q.choices.indexOf(q.w);
+  const kind=ci===correctIdx?"r":(ci>=0?"w":"s");
+  VT.res.push({w:q.w,lv:q.lv,listen:q.listen,kind});
+  document.querySelectorAll("#vt-choices .vt-choice").forEach((b,bi)=>{b.disabled=true;if(bi===correctIdx)b.classList.add("ok");else if(bi===ci)b.classList.add("ng");});
+  // 答えた後は表記と読みを見せる
+  document.getElementById("vt-word").innerHTML=vtWordHtml(q.w)+(q.w.r!==q.w.w?`<div class="vt-reading">${esc(q.w.r)}</div>`:"");
+  try{if(kind==="r")sfx("beep");}catch(e){}
+  setTimeout(vtNext,kind==="r"?450:1100);
+}
+function vtFinish(){
+  const lvs=VT.lvs,tg=VT.tg;const lines={};let knownTotal=0;const sizes={},pHat={};
+  lvs.forEach(l=>{
+    const rs=VT.res.filter(r=>r.lv===l);const n=rs.length||1;
+    const R=rs.filter(r=>r.kind==="r").length,W=rs.filter(r=>r.kind==="w").length;
+    pHat[l]=Math.max(0,Math.min(1,(R-W/3)/n));   // 4択のまぐれ当たりを補正
+    sizes[l]=vtPool(l).length;
+  });
+  lvs.forEach((g,gi)=>{let k=0,s=0;lvs.slice(0,gi+1).forEach(l=>{k+=pHat[l]*sizes[l];s+=sizes[l];});lines[g]=Math.round(k/s*100);});
+  lvs.forEach(l=>knownTotal+=pHat[l]*sizes[l]);
+  const R=VT.res.filter(r=>r.kind==="r").length,W=VT.res.filter(r=>r.kind==="w").length,S=VT.res.length-R-W;
+  const L=VT.res.filter(r=>r.listen),La=L.filter(r=>r.kind==="r").length;
+  const hist=loadVT();const mine=hist.filter(h=>h.target===tg);const prev=mine[mine.length-1];
+  const prevBest=mine.reduce((m,h)=>Math.max(m,h.ready),-1);
+  const rec={t:Date.now(),target:tg,ready:lines[tg],lines,known:Math.round(knownTotal),r:R,w:W,s:S};
+  hist.push(rec);saveVT(hist);
+  const missed=VT.res.filter(r=>r.kind!=="r").map(r=>r.w);
+  missed.forEach(w=>{const k=K(w);state.weak[k]=(state.weak[k]||0)+1;delete state.mastered[k];delete state.perfect[k];});
+  if(missed.length)saveState();
+  const lvLabel=p=>vtt("lv")[p>=90?3:p>=75?2:p>=55?1:0];
+  const col=p=>p>=90?"#4ade80":p>=75?"#ffd76a":p>=55?"#fb923c":"#fb7185";
+  const diff=prev?rec.ready-prev.ready:null;
+  const bars=lvs.map(g=>`<div class="vt-bar"><span class="vt-bl">${vtt("line").replace("{n}",g)}</span><div class="vt-bt"><div class="vt-bf" style="width:${lines[g]}%;background:${col(lines[g])}"></div></div><b style="color:${col(lines[g])}">${lines[g]}%</b></div>`).join("");
+  const allBest=Math.max(prevBest,rec.ready);
+  const histRows=[...mine,rec].slice(-5).reverse().map(h=>{const d=new Date(h.t);return `<div class="vt-hrow"><span>${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}</span><b style="color:${col(h.ready)}">${h.ready===allBest?"🏆 ":""}${h.ready}%</b></div>`;}).join("");
+  const res=document.getElementById("vresult");
+  res.innerHTML=`<h2>${vtt("resTitle")}</h2>
+    <div class="vt-ring" style="--p:${rec.ready};--c:${col(rec.ready)}"><div class="vt-ring-in"><div class="vt-pct">${rec.ready}<small>%</small></div><div class="vt-lvl" style="color:${col(rec.ready)}">${lvLabel(rec.ready)}</div></div></div>
+    <div class="vt-sub">${vtt("readiness").replace("{n}",tg)}</div>
+    ${prevBest>=0&&rec.ready>prevBest?`<div class="vt-newbest">${vtt("newBest")}</div>`:""}
+    <div class="vt-delta">${diff===null?vtt("first"):vtt("prev").replace("{d}",(diff>=0?"+":"")+diff+"%")}${prevBest>=0?" ・ "+vtt("bestIs").replace("{p}",allBest):""}</div>
+    <div class="vt-card">${bars}<div class="vt-known">${vtt("known").replace("{k}",rec.known.toLocaleString())}</div>
+      <div class="vt-detail">${vtt("detail").replace("{r}",R).replace("{w}",W).replace("{s}",S)}${L.length?" ・ "+vtt("listenAcc").replace("{a}",La).replace("{b}",L.length):""}</div></div>
+    ${missed.length?`<div class="go-missed"><h4>${vtt("missed")}</h4>${missed.map(w=>`<div class="row"><b>${esc(w.w)}${w.r!==w.w?` <small style="opacity:.7;font-weight:600">${esc(w.r)}</small>`:""}</b><span>${esc(meaningOf(w))}</span></div>`).join("")}<div class="note">${vtt("added")}</div></div>`:""}
+    <div class="vt-card"><h4 class="vt-h4">${vtt("history")}</h4>${histRows}</div>
+    <p class="vt-note">${vtt("note")}</p>
+    <button class="done-btn white" onclick="openVTest()">${vtt("again")}</button>
+    <button class="done-btn white" onclick="goHome()">${vtt("home")}</button>`;
+  showScreen("vresult");res.scrollTop=0;
+}
+function quitVTest(){clearInterval(VT.timer);goHome();}
 
 init();
 </script>
