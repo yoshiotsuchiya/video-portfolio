@@ -328,6 +328,12 @@ body{background:#1a1340;min-height:100%}
 #app{height:100vh;height:100dvh}
 html,body{height:100%;height:100dvh}
 
+.g-modes{display:flex;gap:8px;background:rgba(255,255,255,0.1);padding:4px;border-radius:99px;border:1px solid rgba(255,255,255,0.25)}
+.g-mode{border:none;background:transparent;color:rgba(255,255,255,0.75);font-weight:800;font-size:13px;padding:9px 16px;border-radius:99px;cursor:pointer}
+.g-mode.active{background:#fff;color:#b3202e}
+.g-mode.off{opacity:0.35;cursor:default}
+.new-badge{position:absolute;top:14px;left:16px;background:linear-gradient(90deg,#c41e2e,#e8a23c);color:#fff;font-size:11px;font-weight:900;letter-spacing:1px;padding:4px 10px;border-radius:99px;box-shadow:0 2px 8px rgba(196,30,46,0.35)}
+
 </style>
 </head>
 <body>
@@ -371,17 +377,14 @@ html,body{height:100%;height:100dvh}
     <div class="icon icon-vt">📊</div>
     <div><div id="vt-menu-title">단어력 테스트</div><div class="meta" id="vt-menu-meta">50문제로 지금의 단어력 체크</div></div>
   </button>
-  <button class="menu-btn" onclick="startNew()">
-    <div class="icon icon-new">▶</div>
-    <div><div>새 단어 배우기</div><div class="meta" id="new-meta"></div></div>
+  <span id="new-meta" style="display:none"></span>
+  <button class="menu-btn" onclick="startAll()">
+    <div class="icon icon-all">≡</div>
+    <div><div>단어 셔플</div><div class="meta" id="all-meta"></div></div>
   </button>
   <button class="menu-btn" onclick="startReview()">
     <div class="icon icon-review">↺</div>
     <div><div>약한 단어 복습</div><div class="meta" id="review-meta"></div></div>
-  </button>
-  <button class="menu-btn" onclick="startAll()">
-    <div class="icon icon-all">≡</div>
-    <div><div>단어 셔플</div><div class="meta" id="all-meta"></div></div>
   </button>
   <button class="menu-btn" onclick="startPerfect()">
     <div class="icon icon-perfect">★</div>
@@ -416,6 +419,7 @@ html,body{height:100%;height:100dvh}
     <div class="card-outer" onclick="flipCard()">
       <div class="card-inner" id="card">
         <div class="face front">
+          <div class="new-badge" id="new-badge">NEW</div>
           <div class="ko-word" id="ko"></div>
           <div class="reading" id="reading"></div>
           <div class="tap-hint">탭해서 확인</div>
@@ -531,7 +535,8 @@ function updateHome(){
   document.getElementById("h-total").textContent=f.length;
   document.getElementById("new-meta").textContent=f.filter(w=>!st.mastered[K(w)]&&!st.weak[K(w)]).length+"개 미학습";
   document.getElementById("review-meta").textContent=cnt(st.weak)+"개 복습 필요";
-  document.getElementById("all-meta").textContent=f.filter(w=>!st.perfect[K(w)]).length+"개 (완벽한 단어 제외)";
+  const nNew=f.filter(w=>!st.mastered[K(w)]&&!st.weak[K(w)]).length;
+  document.getElementById("all-meta").textContent=f.filter(w=>!st.perfect[K(w)]).length+"개 (완벽한 단어 제외)"+(nNew?" · NEW "+nNew+"개":"");
   document.getElementById("perfect-meta").textContent=cnt(st.perfect)+"개";
   if(typeof updateGameMenu==="function") updateGameMenu();
   if(typeof updateVTMenu==="function") updateVTMenu();
@@ -556,7 +561,10 @@ function startAll(){
   isPerfectMode=false;
   const words=getFiltered().filter(w=>!state.perfect[K(w)]);
   if(!words.length){alert("모두 완벽한 단어입니다!");return;}
-  startDeck(words);
+  // 未学習（NEW）を先に、そのあと学習済みをランダムに
+  const isNew=w=>!state.mastered[K(w)]&&!state.weak[K(w)];
+  deck=[...shuffle(words.filter(isNew)),...shuffle(words.filter(w=>!isNew(w)))];idx=0;ngList=[];okCount=0;
+  showScreen("study");renderCard();
 }
 function startPerfect(){
   const words=getFiltered().filter(w=>state.perfect[K(w)]);
@@ -574,6 +582,7 @@ function renderCard(){
   function fill(){
     const w=deck[idx];currentWord=w;
     document.getElementById("ko").textContent=w.w;
+    document.getElementById("new-badge").style.display=(!state.mastered[K(w)]&&!state.weak[K(w)])?"block":"none";
     document.getElementById("reading").textContent=w.r!==w.w?w.r:"";
     document.getElementById("jp").textContent=w.m;
     document.getElementById("hanja").textContent=w.w+(w.r!==w.w?"（"+w.r+"）":"");
@@ -658,7 +667,7 @@ function speak(){
 // ===================== 単語シューティング =====================
 const GAME_KEY="jpcard_game_v1";
 const G_TEXT={
-  ko:{menu:"게임",sub:"단어 슈팅",best:"최고 기록",none:"아직 기록 없음",howto:"일본어 단어의 올바른 뜻을 쏴라!<br>⚡ 빨리 쏠수록 고득점",ctrl:"화면 왼쪽/오른쪽을 탭 (키보드 ← →)",start:"TAP TO START",over:"게임 오버",record:"🏆 최고 기록 갱신!",bestIs:"최고 기록 ",correct:"정답",combo:"최대 콤보",miss:"실수",missed:"틀린 단어",added:"↑ 복습 목록에 추가했습니다",perfect:"노미스!",retry:"다시 하기",home:"홈으로",few:"단어가 부족합니다",paused:"일시정지<br>탭하면 계속",answer:"정답",godspeed:"신속!",quick:"속사!",sec:"초",fastest:"최고 속도"},
+  ko:{menu:"게임",sub:"단어 슈팅",best:"최고 기록",none:"아직 기록 없음",howto:"일본어 단어의 올바른 뜻을 쏴라!<br>⚡ 빨리 쏠수록 고득점",ctrl:"화면 왼쪽/오른쪽을 탭 (키보드 ← →)",start:"TAP TO START",over:"게임 오버",record:"🏆 최고 기록 갱신!",bestIs:"최고 기록 ",correct:"정답",combo:"최대 콤보",miss:"실수",missed:"틀린 단어",added:"↑ 복습 목록에 추가했습니다",perfect:"노미스!",retry:"다시 하기",home:"홈으로",few:"단어가 부족합니다",paused:"일시정지<br>탭하면 계속",answer:"정답",godspeed:"신속!",quick:"속사!",sec:"초",fastest:"최고 속도",modeAll:"전체",modeWeak:"약한 단어만 ({n}개)",weakModeDesc:"약한 단어 {n}개만 나옵니다",weakModeTitle:"약한 단어 모드 (최고 기록 제외)",graduated:"2번째!",graduatedList:"✌️ 2번 이상 맞힌 단어 {n}개 (카드로 확인하고 「외웠다」로)"},
   ja:{menu:"ゲーム",sub:"単語シューティング",best:"ハイスコア",none:"まだ記録なし",howto:"韓国語の正しい意味を撃ち抜け！<br>⚡ 早く撃つほど高得点",ctrl:"画面の左右をタップ（キーボードは ← →）",start:"TAP TO START",over:"ゲームオーバー",record:"🏆 ハイスコア更新！",bestIs:"ハイスコア ",correct:"正解",combo:"最大コンボ",miss:"ミス",missed:"間違えた単語",added:"↑ 苦手リストに追加しました",perfect:"ノーミス！",retry:"もう一度",home:"ホームに戻る",few:"このレベルは単語が少なすぎます",paused:"一時停止中<br>タップで再開",answer:"正解",godspeed:"神速！",quick:"早撃ち！",sec:"秒",fastest:"最速"},
   en:{menu:"Game",sub:"Word Shooter",best:"High score",none:"No record yet",howto:"Shoot the correct meaning!<br>⚡ Faster shots score more",ctrl:"Tap left/right (keyboard: ← →)",start:"TAP TO START",over:"Game Over",record:"🏆 New high score!",bestIs:"High score ",correct:"Correct",combo:"Max combo",miss:"Misses",missed:"Words you missed",added:"↑ Added to your review list",perfect:"No misses!",retry:"Play again",home:"Back to home",few:"Not enough words in this level",paused:"Paused<br>Tap to resume",answer:"Answer",godspeed:"Lightning!",quick:"Quick!",sec:"s",fastest:"Fastest"},
   zh:{menu:"游戏",sub:"单词射击",best:"最高分",none:"暂无记录",howto:"击中正确的意思！<br>⚡ 越快得分越高",ctrl:"点击屏幕左右（键盘 ← →）",start:"TAP TO START",over:"游戏结束",record:"🏆 刷新最高分！",bestIs:"最高分 ",correct:"正确",combo:"最大连击",miss:"失误",missed:"答错的单词",added:"↑ 已加入待复习列表",perfect:"零失误！",retry:"再玩一次",home:"返回首页",few:"该级别单词太少",paused:"已暂停<br>点击继续",answer:"正确答案",godspeed:"神速！",quick:"快枪手！",sec:"秒",fastest:"最快"}
@@ -678,8 +687,20 @@ function updateGameMenu(){
 const G={};  // game state
 const GAME_EXCLUDE_POS={"ことわざ":1,"文法":1};
 
-function gamePool(){
-  return getFiltered();
+function gamePool(mode){
+  const base=getFiltered();
+  if(mode==="weak")return base.filter(w=>state.weak[K(w)]);
+  return base;
+}
+let gameMode="all";
+function setGameMode(m,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault();}
+  if(m==="weak"&&gamePool("weak").length<1)return;
+  gameMode=m;
+  G.pool=shuffle(gamePool(m));G.pi=0;
+  document.querySelectorAll(".g-mode").forEach(b=>b.classList.toggle("active",b.dataset.mode===m));
+  const bestEl=document.querySelector(".g-best");
+  if(bestEl){const best=loadBest()[currentTopik]||0;bestEl.textContent=m==="weak"?gt("weakModeDesc").replace("{n}",G.pool.length):"JLPT "+lvName()+" · "+gt("best")+" "+best.toLocaleString();}
 }
 const LOOSE_POS={"挨拶":1,"感動詞":1,"フレーズ":1};
 function meaningParts(m){return m.replace(/\([^)]*\)/g," ").split(/[,、\s]+/).filter(x=>x.length>=1);}
@@ -827,22 +848,28 @@ function updateSoundBtn(){const b=document.getElementById("g-sound");if(b)b.text
 // ===================== ゲーム進行 =====================
 function startGame(){
   audioUnlock();updateSoundBtn();stopBGM(0.1);
-  const pool=gamePool();
-  if(pool.length<2){alert(gt("few"));return;}
+  if(gameMode==="weak"&&gamePool("weak").length<1)gameMode="all";
+  const pool=gamePool(gameMode);
+  if(pool.length<(gameMode==="weak"?1:2)){alert(gt("few"));return;}
   Object.assign(G,{
     pool:shuffle(pool),pi:0,qn:0,score:0,shownScore:0,lives:3,combo:0,maxCombo:0,correct:0,missed:[],
     speed:0.085,phase:"ready",q:null,shipX:0.5,shipTarget:0.5,shipV:0,bullet:null,particles:[],rings:[],floaters:[],debris:[],
-    flash:null,last:0,paused:false,banner:null,fastest:0,shake:0,muzzle:0,shieldHit:0,time:0
+    flash:null,last:0,paused:false,banner:null,fastest:0,shake:0,muzzle:0,shieldHit:0,time:0,hits:{},graduated:[]
   });
   initScenery();
   showScreen("game");
   updateHud();
   resizeGameCanvas();
   const best=loadBest()[currentTopik]||0;
+  const nWeak=gamePool("weak").length;
   showGameOverlay(`<div class="g-logo">WORD<br>SHOOTER</div>
     <div class="hint">${gt("howto")}</div>
+    <div class="g-modes">
+      <button class="g-mode${gameMode==="all"?" active":""}" data-mode="all" onpointerdown="setGameMode('all',event)">${gt("modeAll")}</button>
+      <button class="g-mode${gameMode==="weak"?" active":""}${nWeak<1?" off":""}" data-mode="weak" onpointerdown="setGameMode('weak',event)">${gt("modeWeak").replace("{n}",nWeak)}</button>
+    </div>
     <div class="g-ctrl">${gt("ctrl")}</div>
-    <div class="g-best">JLPT ${lvName()} · ${gt("best")} ${best.toLocaleString()}</div>
+    <div class="g-best">${gameMode==="weak"?gt("weakModeDesc").replace("{n}",pool.length):"JLPT "+lvName()+" · "+gt("best")+" "+best.toLocaleString()}</div>
     <div class="g-start">${gt("start")}</div>`);
   G.phase="ready";
   if(!G.raf) G.raf=requestAnimationFrame(gameLoop);
@@ -892,6 +919,8 @@ function resolve(side,timeout){
   const ex=(i)=>({x:laneX(i)*S.w,y:enemyY(q.y)*S.h});
   if(ok){
     G.combo++;G.maxCombo=Math.max(G.maxCombo,G.combo);G.correct++;
+    if(gameMode==="weak"){const k=K(q.w);G.hits[k]=(G.hits[k]||0)+1;
+      if(G.hits[k]===2&&!G.graduated.includes(q.w)){G.graduated.push(q.w);const gp=ex(side);G.floaters.push({x:gp.x,y:gp.y-44,text:gt("graduated"),sub:"",t:0,color:"#4ade80"});}}
     // 早撃ちボーナス：タップまでの秒数が短いほど大きい（最大+400）
     const rt=q.reactT||0;
     const speedBonus=Math.round(400*Math.pow(Math.max(0,1-rt/2.5),2));
@@ -935,12 +964,12 @@ function endGame(){
   const st=state;
   G.missed.forEach(w=>{st.weak[K(w)]=(st.weak[K(w)]||0)+1;delete st.mastered[K(w)];delete st.perfect[K(w)];});
   if(G.missed.length) saveState();
-  const best=loadBest();const prev=best[currentTopik]||0;const isRecord=G.score>prev;
+  const best=loadBest();const prev=best[currentTopik]||0;const isRecord=gameMode!=="weak"&&G.score>prev;
   if(isRecord){best[currentTopik]=G.score;saveBest(best);}
   document.getElementById("go-title").textContent=gt("over");
   document.getElementById("go-score").textContent=G.score.toLocaleString();
   const rec=document.getElementById("go-record");rec.textContent=gt("record");rec.style.display=isRecord&&G.score>0?"inline-block":"none";
-  document.getElementById("go-best").textContent="JLPT "+lvName()+" · "+gt("bestIs")+Math.max(prev,G.score).toLocaleString();
+  document.getElementById("go-best").textContent=gameMode==="weak"?gt("weakModeTitle"):"JLPT "+lvName()+" · "+gt("bestIs")+Math.max(prev,G.score).toLocaleString();
   document.getElementById("go-correct").textContent=G.correct;
   document.getElementById("go-combo").textContent=G.maxCombo;
   document.getElementById("go-fast").innerHTML=G.fastest?G.fastest.toFixed(2)+'<small style="font-size:11px;margin-left:1px">'+gt("sec")+'</small>':"-";
@@ -955,6 +984,8 @@ function endGame(){
   if(G.missed.length){
     box.innerHTML=`<h4>${gt("missed")}</h4>`+G.missed.map(w=>`<div class="row"><b>${esc(w.w)}${w.r!==w.w?" <small style=\"opacity:.7;font-weight:600\">"+esc(w.r)+"</small>":""}</b><span>${esc(meaningOf(w))}</span></div>`).join("")+`<div class="note">${gt("added")}</div>`;
   }else box.innerHTML=`<h4>${gt("perfect")}</h4>`;
+  const wrow=w=>`<div class="row"><b>${esc(w.w)}${w.r!==w.w?" <small style=\"opacity:.7;font-weight:600\">"+esc(w.r)+"</small>":""}</b><span>${esc(meaningOf(w))}</span></div>`;
+  if(G.graduated&&G.graduated.length){box.innerHTML+=`<h4 style="margin-top:12px;color:#4ade80">${gt("graduatedList").replace("{n}",G.graduated.length)}</h4>`+G.graduated.map(wrow).join("");}
   showScreen("gameover");
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -1342,7 +1373,7 @@ function drawGame(){
   const stage=()=>document.getElementById("game-stage");
   document.addEventListener("pointerdown",e=>{
     const s=stage();if(!s||!document.getElementById("game").classList.contains("active"))return;
-    if(!s.contains(e.target))return;
+    if(!s.contains(e.target)||e.target.closest(".g-mode"))return;
     e.preventDefault();
     const r=s.getBoundingClientRect();
     shoot(e.clientX-r.left<r.width/2?0:1);
@@ -1426,7 +1457,7 @@ function startVTest(){
   const order=shuffle(qs);
   const nListen=Math.round(order.length*VT_LISTEN_RATE);
   order.forEach((q,i)=>{q.listen=i<nListen;q.choices=vtChoices(q.w);});
-  Object.assign(VT,{tg,lvs,qs:shuffle(order),i:-1,res:[],timer:null,t0:0,answered:false});
+  Object.assign(VT,{tg,lvs,qs:shuffle(order),i:-1,res:[],timer:null,t0:0,answered:false,active:true,run:(VT.run||0)+1});
   document.getElementById("vt-intro").style.display="none";
   document.getElementById("vt-q").style.display="flex";
   vtNext();
@@ -1434,6 +1465,7 @@ function startVTest(){
 function vtWordHtml(w){return `<div class="vt-ko">${esc(w.w)}</div>`;}
 function vtNext(){
   clearInterval(VT.timer);
+  if(!VT.active)return;
   VT.i++;
   if(VT.i>=VT.qs.length){vtFinish();return;}
   const q=VT.qs[VT.i];VT.answered=false;
@@ -1459,7 +1491,7 @@ function vtNext(){
   if(!q.listen)vtStartTimer();
 }
 function vtStartTimer(){
-  if(VT.started||VT.answered)return;VT.started=true;
+  if(!VT.active||VT.started||VT.answered)return;VT.started=true;
   const q=VT.qs[VT.i];const limit=q.listen?VT_TIME_LISTEN:VT_TIME;
   VT.t0=performance.now();
   const bar=document.getElementById("vt-timer");
@@ -1472,11 +1504,11 @@ function vtStartTimer(){
 }
 function vtSpeak(byTap){
   const q=VT.qs[VT.i];if(!q)return;
-  try{const u=jaUtter(q.w.r,0.9);u.onstart=()=>vtStartTimer();speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
+  try{const run=VT.run;const u=jaUtter(q.w.r,0.9);u.onstart=()=>{if(VT.active&&VT.run===run)vtStartTimer();};speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
   if(byTap){const b=document.getElementById("vt-play");if(b){b.classList.remove("big");b.textContent="🔊 "+vtt("replay");}setTimeout(vtStartTimer,600);}
 }
 function vtAnswer(ci){
-  if(VT.answered)return;VT.answered=true;clearInterval(VT.timer);
+  if(!VT.active||VT.answered)return;VT.answered=true;clearInterval(VT.timer);
   const q=VT.qs[VT.i];
   const correctIdx=q.choices.indexOf(q.w);
   const kind=ci===correctIdx?"r":(ci>=0?"w":"s");
@@ -1485,9 +1517,10 @@ function vtAnswer(ci){
   // 答えた後は表記と読みを見せる
   document.getElementById("vt-word").innerHTML=vtWordHtml(q.w)+(q.w.r!==q.w.w?`<div class="vt-reading">${esc(q.w.r)}</div>`:"");
   try{if(kind==="r")sfx("beep");}catch(e){}
-  setTimeout(vtNext,kind==="r"?450:1100);
+  const run=VT.run;setTimeout(()=>{if(VT.active&&VT.run===run)vtNext();},kind==="r"?450:1100);
 }
 function vtFinish(){
+  if(!VT.active)return;VT.active=false;clearInterval(VT.timer);
   const lvs=VT.lvs,tg=VT.tg;const lines={};let knownTotal=0;const sizes={},pHat={};
   lvs.forEach(l=>{
     const rs=VT.res.filter(r=>r.lv===l);const n=rs.length||1;
@@ -1527,7 +1560,7 @@ function vtFinish(){
     <button class="done-btn white" onclick="goHome()">${vtt("home")}</button>`;
   showScreen("vresult");res.scrollTop=0;
 }
-function quitVTest(){clearInterval(VT.timer);goHome();}
+function quitVTest(){VT.active=false;clearInterval(VT.timer);try{speechSynthesis.cancel();}catch(e){}goHome();}
 
 init();
 </script>
