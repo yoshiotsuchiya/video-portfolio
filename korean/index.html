@@ -92,6 +92,8 @@ body{background:#1a1340;min-height:100%}
 #study{gap:12px}
 .top-bar{display:flex;align-items:center;gap:10px}
 .back-btn{background:rgba(255,255,255,0.18);border:none;font-size:16px;padding:8px 10px;cursor:pointer;color:#fff;border-radius:10px;line-height:1}
+.undo-btn{background:rgba(255,255,255,0.18);border:none;font-size:17px;padding:7px 11px;cursor:pointer;color:#fff;border-radius:10px;line-height:1}
+.undo-btn:disabled{opacity:0.3;cursor:default}
 .prog-wrap{flex:1;height:6px;background:rgba(255,255,255,0.22);border-radius:99px;overflow:hidden}
 .prog-fill{height:100%;background:#4ade80;border-radius:99px;transition:width 0.3s}
 .prog-label{font-size:13px;color:rgba(255,255,255,0.85);white-space:nowrap;font-weight:600}
@@ -293,6 +295,13 @@ body{background:#1a1340;min-height:100%}
 .orb{display:none}
 .vt-bl2{min-width:92px}
 .vt-split{border-color:rgba(255,226,122,0.45)}
+
+.g-modes{display:flex;gap:8px;background:rgba(255,255,255,0.1);padding:4px;border-radius:99px;border:1px solid rgba(255,255,255,0.25)}
+.g-mode{border:none;background:transparent;color:rgba(255,255,255,0.75);font-weight:800;font-size:13px;padding:9px 16px;border-radius:99px;cursor:pointer}
+.g-mode.active{background:#fff;color:#5b2a86}
+.g-mode.off{opacity:0.35;cursor:default}
+.g-modes.lives{margin-top:8px}
+.new-badge{position:absolute;top:14px;left:16px;background:linear-gradient(90deg,#ff6ec7,#ffb347);color:#fff;font-size:11px;font-weight:900;letter-spacing:1px;padding:4px 10px;border-radius:99px;box-shadow:0 2px 8px rgba(255,110,199,0.4)}
 </style>
 </head>
 <body>
@@ -320,6 +329,7 @@ body{background:#1a1340;min-height:100%}
     <div class="stat-card red"><div class="num" id="h-weak">0</div><div class="lbl">要復習</div></div>
     <div class="stat-card blue"><div class="num" id="h-total">0</div><div class="lbl">総単語数</div></div>
   </div>
+  <span id="new-meta" style="display:none"></span>
   <div id="level-bar">
     <button class="lv-btn active" data-lv="all" onclick="setLevel(this)">全て</button>
   </div>
@@ -331,17 +341,13 @@ body{background:#1a1340;min-height:100%}
     <div class="icon icon-vt">📊</div>
     <div><div id="vt-menu-title">単語力テスト</div><div class="meta" id="vt-menu-meta">50問で今の単語力をチェック</div></div>
   </button>
-  <button class="menu-btn" onclick="startNew()">
-    <div class="icon icon-new">▶</div>
-    <div><div>新しい単語を学ぶ</div><div class="meta" id="new-meta">未学習の単語からスタート</div></div>
+  <button class="menu-btn" onclick="startAll()">
+    <div class="icon icon-all">≡</div>
+    <div><div>単語シャッフル</div><div class="meta" id="all-meta">全単語をランダムに</div></div>
   </button>
   <button class="menu-btn" onclick="startReview()">
     <div class="icon icon-review">↺</div>
     <div><div>苦手を復習</div><div class="meta" id="review-meta">要復習リストから</div></div>
-  </button>
-  <button class="menu-btn" onclick="startAll()">
-    <div class="icon icon-all">≡</div>
-    <div><div>単語シャッフル</div><div class="meta" id="all-meta">全単語をランダムに</div></div>
   </button>
   <button class="menu-btn" onclick="startPerfect()">
     <div class="icon icon-perfect">★</div>
@@ -368,6 +374,7 @@ body{background:#1a1340;min-height:100%}
     <button class="back-btn" onclick="goHome()">✕</button>
     <div class="prog-wrap"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
     <div class="prog-label"><span id="prog-cur">1</span>/<span id="prog-total">1</span></div>
+    <button class="undo-btn" id="undo-btn" onclick="undoCard()" title="ひとつ戻る" disabled>↩</button>
   </div>
   <div class="card-area">
     <div class="example-wrap">
@@ -377,6 +384,7 @@ body{background:#1a1340;min-height:100%}
     <div class="card-outer" onclick="flipCard()">
       <div class="card-inner" id="card">
         <div class="face front">
+          <div class="new-badge" id="new-badge">NEW</div>
           <div class="ko-word" id="ko"></div>
           <div class="reading" id="reading"></div>
           <div class="tap-hint">タップして確認</div>
@@ -645,7 +653,8 @@ function updateHome(){
   const unit=unitMap[currentLang]||unitMap.ja;
   document.getElementById("new-meta").textContent=newWords.length+unit+(unlearnedMap[currentLang]||unlearnedMap.ja);
   document.getElementById("review-meta").textContent=filtered.filter(w=>st.weak[K(w)]).length+unit+(toReviewMap[currentLang]||toReviewMap.ja);
-  document.getElementById("all-meta").textContent=shuffleWords.length+unit+(exclPerfectMap[currentLang]||exclPerfectMap.ja);
+  const newMap={ja:"・NEW {n}語",en:" · NEW {n}",zh:"・NEW {n}个"};
+  document.getElementById("all-meta").textContent=shuffleWords.length+unit+(exclPerfectMap[currentLang]||exclPerfectMap.ja)+(newWords.length?(newMap[currentLang]||newMap.ja).replace("{n}",newWords.length):"");
   document.getElementById("perfect-meta").textContent=Object.keys(st.perfect).length+unit;
   if(typeof updateGameMenu==="function") updateGameMenu();
   if(typeof updateVTMenu==="function") updateVTMenu();
@@ -673,7 +682,11 @@ function startAll(){
   const st=curState();
   const words=getFiltered().filter(w=>!st.perfect[K(w)]);
   if(words.length===0){alert("すべて完璧な単語です！");return;}
-  startDeck(words);
+  // 未学習（NEW）の単語を先に出し、そのあと学習済みをランダムに
+  const isNew=w=>!st.mastered[K(w)]&&!st.weak[K(w)];
+  const deckOrder=[...shuffle(words.filter(isNew)),...shuffle(words.filter(w=>!isNew(w)))];
+  deck=deckOrder;idx=0;ngList=[];okCount=0;undoStack=[];
+  showScreen("study");renderCard();
 }
 function startPerfect(){
   const st=curState();
@@ -723,7 +736,7 @@ function openSimilarScreen(){
   showScreen("similar");
 }
 function startDeck(words){
-  deck=shuffle(words);idx=0;ngList=[];okCount=0;
+  deck=shuffle(words);idx=0;ngList=[];okCount=0;undoStack=[];
   showScreen("study");renderCard();
 }
 function retryDeck(){startDeck([...deck]);}
@@ -741,6 +754,7 @@ function renderCard(){
     const posLabel=currentLang==="en"&&w.pos_en?w.pos_en:(currentLang==="zh"&&w.pos_zh?w.pos_zh:w.pos);
     document.getElementById("ko").textContent=w.ko;
     document.getElementById("reading").textContent=w.r;
+    {const st=curState();document.getElementById("new-badge").style.display=(!st.mastered[K(w)]&&!st.weak[K(w)])?"block":"none";}
     document.getElementById("jp").textContent=meaning;
     document.getElementById("hanja").textContent=w.hanja||"";
     document.getElementById("pos").textContent=posLabel;
@@ -753,7 +767,7 @@ function renderCard(){
     document.getElementById("btn-ok").disabled=true;
     document.getElementById("btn-ng").disabled=true;
     document.querySelector(".btn-row").style.display=isPerfectMode?"none":"grid";
-    updateStarUI();
+    updateStarUI();updateUndoBtn();
   }
 
   flipped=false;
@@ -771,6 +785,7 @@ function renderCard(){
 function flipCard(){
   if(idx>=deck.length)return;
   if(isPerfectMode&&flipped){
+    undoStack.push({idx,w:deck[idx],k:null});if(undoStack.length>50)undoStack.shift();
     idx++;renderCard();
     return;
   }
@@ -849,9 +864,26 @@ function updateStarUI(){
   document.getElementById("star-back").classList.toggle("starred",isStarred);
 }
 
+let undoStack=[];
+function updateUndoBtn(){const b=document.getElementById("undo-btn");if(b)b.disabled=undoStack.length===0;}
+// ひとつ前のカードに戻る（直前の判定も取り消す）
+function undoCard(){
+  if(!undoStack.length)return;
+  const h=undoStack.pop();
+  const st=curState();
+  if(h.k){
+    ["mastered","weak","perfect"].forEach(f=>{if(h.prev[f]===undefined)delete st[f][h.k];else st[f][h.k]=h.prev[f];});
+    if(h.ok)okCount=Math.max(0,okCount-1);else{const i=ngList.lastIndexOf(h.w);if(i>=0)ngList.splice(i,1);}
+    saveState();
+  }
+  idx=h.idx;
+  if(!document.getElementById("study").classList.contains("active"))showScreen("study");
+  renderCard();
+}
 function answer(ok){
   const st=curState();
   const w=deck[idx];
+  {const k=K(w);undoStack.push({idx,w,k,ok,prev:{mastered:st.mastered[k],weak:st.weak[k],perfect:st.perfect[k]}});if(undoStack.length>50)undoStack.shift();}
   if(ok){
     okCount++;
     st.mastered[K(w)]=true;
@@ -1001,10 +1033,9 @@ function t(key){
 function applyLangToUI(){
   document.getElementById("app-title").textContent=t("appTitle");
   document.getElementById("new-meta").dataset.base=t("menuNewMeta");
-  document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn)")[0].querySelector("div > div").textContent=t("menuNewTitle");
+  document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn)")[0].querySelector("div > div").textContent=t("menuAllTitle");
   document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn)")[1].querySelector("div > div").textContent=t("menuReviewTitle");
-  document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn)")[2].querySelector("div > div").textContent=t("menuAllTitle");
-  document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn)")[3].querySelector("div > div").textContent=t("menuPerfectTitle");
+  document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn)")[2].querySelector("div > div").textContent=t("menuPerfectTitle");
   document.getElementById("similar-menu-title").textContent=t("menuSimilarTitle");
   document.getElementById("similar-menu-meta").textContent=t("menuSimilarMeta");
   document.getElementById("similar-screen-title").textContent=t("similarScreenTitle");
@@ -1079,9 +1110,9 @@ init();
 // ===================== 単語シューティング =====================
 const GAME_KEY="kf_game_v1";
 const G_TEXT={
-  ja:{menu:"ゲーム",sub:"単語シューティング",best:"ハイスコア",none:"まだ記録なし",howto:"韓国語の正しい意味を撃ち抜け！<br>⚡ 早く撃つほど高得点",ctrl:"画面の左右をタップ（キーボードは ← →）",start:"TAP TO START",over:"ゲームオーバー",record:"🏆 ハイスコア更新！",bestIs:"ハイスコア ",correct:"正解",combo:"最大コンボ",miss:"ミス",missed:"間違えた単語",added:"↑ 苦手リストに追加しました",perfect:"ノーミス！",retry:"もう一度",home:"ホームに戻る",few:"このレベルは単語が少なすぎます",paused:"一時停止中<br>タップで再開",answer:"正解",godspeed:"神速！",quick:"早撃ち！",sec:"秒",fastest:"最速"},
-  en:{menu:"Game",sub:"Word Shooter",best:"High score",none:"No record yet",howto:"Shoot the correct meaning!<br>⚡ Faster shots score more",ctrl:"Tap left/right (keyboard: ← →)",start:"TAP TO START",over:"Game Over",record:"🏆 New high score!",bestIs:"High score ",correct:"Correct",combo:"Max combo",miss:"Misses",missed:"Words you missed",added:"↑ Added to your review list",perfect:"No misses!",retry:"Play again",home:"Back to home",few:"Not enough words in this level",paused:"Paused<br>Tap to resume",answer:"Answer",godspeed:"Lightning!",quick:"Quick!",sec:"s",fastest:"Fastest"},
-  zh:{menu:"游戏",sub:"单词射击",best:"最高分",none:"暂无记录",howto:"击中正确的意思！<br>⚡ 越快得分越高",ctrl:"点击屏幕左右（键盘 ← →）",start:"TAP TO START",over:"游戏结束",record:"🏆 刷新最高分！",bestIs:"最高分 ",correct:"正确",combo:"最大连击",miss:"失误",missed:"答错的单词",added:"↑ 已加入待复习列表",perfect:"零失误！",retry:"再玩一次",home:"返回首页",few:"该级别单词太少",paused:"已暂停<br>点击继续",answer:"正确答案",godspeed:"神速！",quick:"快枪手！",sec:"秒",fastest:"最快"}
+  ja:{menu:"ゲーム",sub:"単語シューティング",best:"ハイスコア",none:"まだ記録なし",howto:"韓国語の正しい意味を撃ち抜け！<br>⚡ 早く撃つほど高得点",ctrl:"画面の左右をタップ（キーボードは ← →）",start:"TAP TO START",over:"ゲームオーバー",record:"🏆 ハイスコア更新！",bestIs:"ハイスコア ",correct:"正解",combo:"最大コンボ",miss:"ミス",missed:"間違えた単語",added:"↑ 苦手リストに追加しました",perfect:"ノーミス！",retry:"もう一度",home:"ホームに戻る",few:"このレベルは単語が少なすぎます",paused:"一時停止中<br>タップで再開",answer:"正解",godspeed:"神速！",quick:"早撃ち！",sec:"秒",fastest:"最速",modeAll:"全部",modeWeak:"苦手だけ（{n}語）",weakModeDesc:"苦手 {n}語だけが出ます",weakModeTitle:"苦手モード（ハイスコア対象外）",graduated:"2回目！",graduatedList:"✌️ 2回以上当てた単語 {n}語（カードで確認して「覚えた」へ）",allClear:"🎓 苦手ぜんぶ卒業！",lives3:"✈ 3機",lives5:"✈ 5機（イージー）",easyNote:"イージー（ハイスコア対象外）"},
+  en:{menu:"Game",sub:"Word Shooter",best:"High score",none:"No record yet",howto:"Shoot the correct meaning!<br>⚡ Faster shots score more",ctrl:"Tap left/right (keyboard: ← →)",start:"TAP TO START",over:"Game Over",record:"🏆 New high score!",bestIs:"High score ",correct:"Correct",combo:"Max combo",miss:"Misses",missed:"Words you missed",added:"↑ Added to your review list",perfect:"No misses!",retry:"Play again",home:"Back to home",few:"Not enough words in this level",paused:"Paused<br>Tap to resume",answer:"Answer",godspeed:"Lightning!",quick:"Quick!",sec:"s",fastest:"Fastest",modeAll:"All words",modeWeak:"Weak only ({n})",weakModeDesc:"Only your {n} weak words",weakModeTitle:"Weak mode (no high score)",graduated:"Twice!",graduatedList:"✌️ Hit twice or more: {n} (confirm with cards)",allClear:"🎓 All weak words cleared!",lives3:"✈ 3 lives",lives5:"✈ 5 lives (easy)",easyNote:"Easy mode (no high score)"},
+  zh:{menu:"游戏",sub:"单词射击",best:"最高分",none:"暂无记录",howto:"击中正确的意思！<br>⚡ 越快得分越高",ctrl:"点击屏幕左右（键盘 ← →）",start:"TAP TO START",over:"游戏结束",record:"🏆 刷新最高分！",bestIs:"最高分 ",correct:"正确",combo:"最大连击",miss:"失误",missed:"答错的单词",added:"↑ 已加入待复习列表",perfect:"零失误！",retry:"再玩一次",home:"返回首页",few:"该级别单词太少",paused:"已暂停<br>点击继续",answer:"正确答案",godspeed:"神速！",quick:"快枪手！",sec:"秒",fastest:"最快",modeAll:"全部",modeWeak:"只练弱项（{n}）",weakModeDesc:"只出 {n} 个弱项单词",weakModeTitle:"弱项模式（不计最高分）",graduated:"第2次！",graduatedList:"✌️ 击中2次以上 {n}个（请用卡片确认）",allClear:"🎓 弱项全部毕业！",lives3:"✈ 3条命",lives5:"✈ 5条命（简单）",easyNote:"简单模式（不计最高分）"}
 };
 function gt(k){return (G_TEXT[currentLang]||G_TEXT.ja)[k]||G_TEXT.ja[k];}
 function meaningOf(w){return currentLang==="en"&&w.en?w.en:(currentLang==="zh"&&w.zh?w.zh:w.jp);}
@@ -1098,8 +1129,30 @@ function updateGameMenu(){
 const G={};  // game state
 const GAME_EXCLUDE_POS={"ことわざ":1,"文法":1};
 
-function gamePool(){
-  return getFiltered().filter(w=>!GAME_EXCLUDE_POS[w.pos]);
+function gamePool(mode){
+  const base=getFiltered().filter(w=>!GAME_EXCLUDE_POS[w.pos]);
+  if(mode==="weak"){const st=curState();return base.filter(w=>st.weak[K(w)]);}
+  return base;
+}
+let gameMode="all";
+let gameLives=3;try{gameLives=localStorage.getItem("kf_lives")==="5"?5:3;}catch(e){}
+function isEasy(){return gameLives>3;}
+function bestLabel(){return gameMode==="weak"?gt("weakModeDesc").replace("{n}",G.pool.length):isEasy()?gt("easyNote"):"TOPIK "+currentTopik+" · "+gt("best")+" "+(loadBest()[currentTopik]||0).toLocaleString();}
+function setGameLives(n,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault();}
+  gameLives=n;try{localStorage.setItem("kf_lives",String(n));}catch(e){}
+  if(G.phase==="ready"){G.lives=n;updateHud();}
+  document.querySelectorAll(".g-mode[data-lives]").forEach(b=>b.classList.toggle("active",Number(b.dataset.lives)===n));
+  const bestEl=document.querySelector(".g-best");if(bestEl)bestEl.textContent=bestLabel();
+}
+function setGameMode(m,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault();}
+  if(m==="weak"&&gamePool("weak").length<1)return;
+  gameMode=m;
+  G.pool=shuffle(gamePool(m));G.pi=0;
+  document.querySelectorAll(".g-mode").forEach(b=>b.classList.toggle("active",b.dataset.mode===m));
+  const bestEl=document.querySelector(".g-best");
+  if(bestEl)bestEl.textContent=bestLabel();
 }
 const LOOSE_POS={"挨拶":1,"感動詞":1,"フレーズ":1};
 function meaningParts(m){return m.replace(/[（）()〜~・、,／/「」]/g," ").split(/\s+/).filter(x=>x.length>=2);}
@@ -1120,33 +1173,52 @@ function pickDistractor(w){
 // ===================== サウンド =====================
 const SND={ctx:null,on:true};
 try{SND.on=localStorage.getItem("kf_sound")!=="off";}catch(e){}
+function createAudioCtx(){
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  SND.ctx=new AC();SND.noise=null;SND.dead=false;SND.lastCT=-1;SND.stuckSince=0;
+  const comp=SND.ctx.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;
+  SND.master=SND.ctx.createGain();SND.master.gain.value=0.9;SND.master.connect(comp);comp.connect(SND.ctx.destination);
+  // iPhone：電話・Siri・他アプリ・読み上げなどで割り込まれた後、復帰したらBGMを自動で再開
+  SND.ctx.onstatechange=()=>{try{
+    if(SND.ctx.state==="running"&&SND.on&&!BGM.src&&typeof G!=="undefined"&&(G.phase==="play"||G.phase==="count"||G.phase==="after")&&!G.paused)startBGM();
+  }catch(e){}};
+}
+function rebuildAudioCtx(){
+  // 音声エンジンが死んだ（時計が止まった）時に作り直す
+  const wasBGM=!!BGM.src||BGM.want;
+  if(BGM.timer){clearInterval(BGM.timer);BGM.timer=null;}BGM.bus=null;BGM.src=null;BGM.srcA=BGM.srcB=null;
+  try{const old=SND.ctx;SND.ctx=null;if(old)old.close();}catch(e){}
+  try{createAudioCtx();}catch(e){}
+  return wasBGM;
+}
 function audioUnlock(){
   try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}   // iPhoneのマナーモードでも鳴らす
   try{
-    if(!SND.ctx){const AC=window.AudioContext||window.webkitAudioContext;if(AC){SND.ctx=new AC();
-      const comp=SND.ctx.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;
-      SND.master=SND.ctx.createGain();SND.master.gain.value=0.9;SND.master.connect(comp);comp.connect(SND.ctx.destination);}}
+    if(!SND.ctx)createAudioCtx();
+    let restart=false;
+    if(SND.ctx&&(SND.dead||SND.ctx.state==="closed")){restart=rebuildAudioCtx();}
     if(SND.ctx&&SND.ctx.state!=="running")SND.ctx.resume();
     if(SND.ctx){const b=SND.ctx.createBuffer(1,1,22050),s=SND.ctx.createBufferSource();s.buffer=b;s.connect(SND.ctx.destination);s.start(0);}
+    if(restart&&typeof G!=="undefined"&&(G.phase==="play"||G.phase==="count"||G.phase==="after")&&!G.paused)startBGM();
   }catch(e){}
   if(!SND.speechUnlocked){try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u);SND.speechUnlocked=true;}catch(e){}}
 }
-function noiseBuf(){
-  const c=SND.ctx;
-  if(!SND.noise){const n=c.sampleRate*1.5,b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;SND.noise=b;}
-  return SND.noise;
+function noiseBuf(c){
+  c=c||SND.ctx;
+  if(!c._noise){const n=c.sampleRate*1.5,b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;c._noise=b;}
+  return c._noise;
 }
 // t=絶対時刻で鳴らす汎用関数（BGMと効果音で共用）
 function oscAt(t,type,f1,f2,dur,vol,dest,attack){
-  const c=SND.ctx,o=c.createOscillator(),g=c.createGain();
+  const c=dest?dest.context:SND.ctx,o=c.createOscillator(),g=c.createGain();
   o.type=type;o.frequency.setValueAtTime(f1,t);if(f2&&f2!==f1)o.frequency.exponentialRampToValueAtTime(Math.max(f2,1),t+dur);
   g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+(attack||0.006));g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   o.connect(g);g.connect(dest||SND.master);o.start(t);o.stop(t+dur+0.03);
   return o;
 }
 function noiseAt(t,dur,vol,type,f1,f2,dest){
-  const c=SND.ctx,src=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();
-  src.buffer=noiseBuf();fl.type=type;fl.Q.value=0.7;fl.frequency.setValueAtTime(f1,t);if(f2)fl.frequency.exponentialRampToValueAtTime(Math.max(f2,40),t+dur);
+  const c=dest?dest.context:SND.ctx,src=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();
+  src.buffer=noiseBuf(c);fl.type=type;fl.Q.value=0.7;fl.frequency.setValueAtTime(f1,t);if(f2)fl.frequency.exponentialRampToValueAtTime(Math.max(f2,40),t+dur);
   g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   src.connect(fl);fl.connect(g);g.connect(dest||SND.master);src.start(t,Math.random()*0.5);src.stop(t+dur+0.05);
 }
@@ -1178,7 +1250,7 @@ function speakKo(text){
 }
 
 // ---- BGM（その場で作曲・演奏するシンセポップ。Am→F→C→G）----
-const BGM={timer:null,step:0,next:0,bus:null};
+const BGM={timer:null,bus:null,src:null,buf:null,rendering:false,want:false,hype:false};
 const BGM_BPM=114,BGM_STEP=60/BGM_BPM/4;
 const BGM_CHORDS=[
   {root:110.00,arp:[440.00,523.25,659.25,880.00]},   // Am
@@ -1193,30 +1265,74 @@ const BGM_MEL=[ // 2小節(32ステップ)ずつのメロディ [ステップ, �
   [[0,880.00],[6,783.99],[8,659.25],[12,523.25],[16,523.25],[20,587.33],[24,659.25],[28,698.46]],
   [[0,783.99],[4,659.25],[8,783.99],[12,1046.50],[16,987.77],[22,880.00],[24,783.99]]
 ];
+// BGMは8小節ぶんを先に音声データとして作り（OfflineAudioContext）、ループ再生する。
+// 25msタイマーで逐次鳴らす方式はiPhoneの割り込み・タイマー抑制で止まることがあったため。
+const BGM_BARS=8,BGM_LEN=BGM_BARS*16*BGM_STEP;
+setTimeout(()=>{try{ensureBGMBuf();}catch(e){}},1500);   // 起動して少ししたら先に作っておく
+function renderBGM(hype,sr){
+  const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  const oc=new OAC(1,Math.ceil((BGM_LEN+0.6)*sr),sr);
+  const bus=oc.createGain();bus.gain.value=1;bus.connect(oc.destination);
+  const lp=oc.createBiquadFilter();lp.type="lowpass";lp.frequency.value=2200;lp.Q.value=2;lp.connect(bus);
+  for(let st=0;st<BGM_BARS*16;st++)bgmStep(st,st*BGM_STEP+0.02,{bus,lp,hype});
+  return oc.startRendering();
+}
+function ensureBGMBuf(){
+  if(BGM.buf||BGM.rendering)return;
+  const sr=SND.ctx?SND.ctx.sampleRate:48000;   // 再生時は自動で変換されるので、実際のレートと違っても問題ない
+  BGM.rendering=true;
+  Promise.all([renderBGM(false,sr),renderBGM(true,sr)]).then(([a,b])=>{BGM.buf={sr,a,b};BGM.rendering=false;if(BGM.want&&!BGM.src)startBGM();}).catch(e=>{console.error(e);BGM.rendering=false;});
+}
 function startBGM(){
-  if(!canPlay()||BGM.timer)return;
+  if(!canPlay()||BGM.src)return;
+  BGM.want=true;
+  const c=SND.ctx;
+  if(!BGM.buf){ensureBGMBuf();return;}   // 準備できたら自動で開始
   try{
-    const c=SND.ctx;
-    BGM.bus=c.createGain();BGM.bus.gain.setValueAtTime(0.0001,c.currentTime);BGM.bus.gain.exponentialRampToValueAtTime(0.32,c.currentTime+0.6);
+    const t=c.currentTime+0.05;
+    BGM.bus=c.createGain();BGM.bus.gain.setValueAtTime(0.0001,t);BGM.bus.gain.exponentialRampToValueAtTime(0.32,t+0.6);
     BGM.bus.connect(SND.master);
-    BGM.lp=c.createBiquadFilter();BGM.lp.type="lowpass";BGM.lp.frequency.value=2200;BGM.lp.Q.value=2;BGM.lp.connect(BGM.bus);
-    BGM.step=0;BGM.next=c.currentTime+0.08;
-    BGM.timer=setInterval(bgmTick,25);
-  }catch(e){}
+    BGM.gA=c.createGain();BGM.gB=c.createGain();BGM.gA.gain.value=1;BGM.gB.gain.value=0.0001;
+    BGM.gA.connect(BGM.bus);BGM.gB.connect(BGM.bus);
+    const mk=(buf,g)=>{const sN=c.createBufferSource();sN.buffer=buf;sN.loop=true;sN.loopStart=0;sN.loopEnd=BGM_LEN;sN.connect(g);sN.start(t);return sN;};
+    BGM.srcA=mk(BGM.buf.a,BGM.gA);BGM.srcB=mk(BGM.buf.b,BGM.gB);
+    BGM.src=true;BGM.hype=false;
+    SND.lastCT=-1;SND.stuckSince=0;
+    if(BGM.timer)clearInterval(BGM.timer);BGM.timer=setInterval(bgmWatch,500);
+  }catch(e){console.error(e);BGM.src=null;}
 }
 function stopBGM(fade){
+  BGM.want=false;
   if(BGM.timer){clearInterval(BGM.timer);BGM.timer=null;}
-  if(BGM.bus&&SND.ctx){try{const t=SND.ctx.currentTime;BGM.bus.gain.cancelScheduledValues(t);BGM.bus.gain.setValueAtTime(BGM.bus.gain.value,t);BGM.bus.gain.exponentialRampToValueAtTime(0.0001,t+(fade||0.3));const b=BGM.bus;setTimeout(()=>{try{b.disconnect();}catch(e){}},((fade||0.3)+0.1)*1000);}catch(e){}}
-  BGM.bus=null;
+  if(BGM.src&&SND.ctx){try{const c=SND.ctx,t=c.currentTime,f=fade||0.3;
+    BGM.bus.gain.cancelScheduledValues(t);BGM.bus.gain.setValueAtTime(Math.max(BGM.bus.gain.value,0.0001),t);BGM.bus.gain.exponentialRampToValueAtTime(0.0001,t+f);
+    const a=BGM.srcA,b=BGM.srcB,bus=BGM.bus;
+    try{a.stop(t+f+0.05);b.stop(t+f+0.05);}catch(e){}
+    setTimeout(()=>{try{bus.disconnect();}catch(e){}},(f+0.2)*1000);}catch(e){}}
+  BGM.src=null;BGM.bus=null;BGM.srcA=BGM.srcB=null;
 }
-function bgmTick(){
-  if(!canPlay()||!BGM.bus){stopBGM();return;}
-  const c=SND.ctx;
-  while(BGM.next<c.currentTime+0.12){bgmStep(BGM.step,BGM.next);BGM.next+=BGM_STEP;BGM.step++;}
+function bgmSetHype(h){
+  if(!BGM.src||BGM.hype===h||!SND.ctx)return;
+  BGM.hype=h;
+  try{const t=SND.ctx.currentTime;
+    BGM.gA.gain.cancelScheduledValues(t);BGM.gA.gain.setValueAtTime(Math.max(BGM.gA.gain.value,0.0001),t);BGM.gA.gain.exponentialRampToValueAtTime(h?0.0001:1,t+0.4);
+    BGM.gB.gain.cancelScheduledValues(t);BGM.gB.gain.setValueAtTime(Math.max(BGM.gB.gain.value,0.0001),t);BGM.gB.gain.exponentialRampToValueAtTime(h?1:0.0001,t+0.4);
+  }catch(e){}
 }
-function bgmStep(step,t){
+// 監視：音声エンジンの時計が止まっていたら再開を試み、3秒以上戻らなければ次のタップで作り直す
+function bgmWatch(){
+  if(!canPlay()||!BGM.src){if(BGM.timer){clearInterval(BGM.timer);BGM.timer=null;}return;}
+  const c=SND.ctx,now=performance.now();
+  if(c.currentTime===SND.lastCT){
+    if(!SND.stuckSince)SND.stuckSince=now;
+    else{try{c.resume();}catch(e){}if(now-SND.stuckSince>3000)SND.dead=true;}
+    return;
+  }
+  SND.lastCT=c.currentTime;SND.stuckSince=0;
+}
+function bgmStep(step,t,env){
   try{
-    const s=step%16,bar=Math.floor(step/16),ch=BGM_CHORDS[bar%4],bus=BGM.bus,hype=(G.combo||0)>=5;
+    const s=step%16,bar=Math.floor(step/16),ch=BGM_CHORDS[bar%4],bus=env.bus,hype=env.hype;
     // キック
     if(s%4===0){oscAt(t,"sine",130,42,0.22,s===0?0.55:0.42,bus,0.003);}
     // ハイハット
@@ -1227,11 +1343,11 @@ function bgmStep(step,t){
     if([0,3,6,8,10,11,14].includes(s)){const f=(s===6||s===14)?ch.root*2:ch.root;oscAt(t,"triangle",f,0,BGM_STEP*1.6,0.30,bus,0.005);}
     // アルペジオ
     const af=ch.arp[BGM_ARP[s]]*(hype?2:1);
-    oscAt(t,"square",af,0,BGM_STEP*0.9,0.035,BGM.lp,0.003);
+    oscAt(t,"square",af,0,BGM_STEP*0.9,0.035,env.lp,0.003);
     // パッド
     if(s===0){[ch.arp[0]/2,ch.arp[1]/2,ch.arp[2]/2].forEach((f,i)=>{oscAt(t,"triangle",f*(1+(i-1)*0.002),0,BGM_STEP*16,0.045,bus,0.25);});}
-    // メロディ（5小節目から、ベルの音色）
-    if(bar>=4){const ph=BGM_MEL[Math.floor(bar/2)%4],s32=(bar%2)*16+s;
+    // メロディ（ベルの音色）
+    {const ph=BGM_MEL[Math.floor(bar/2)%4],s32=(bar%2)*16+s;
       ph.forEach(([st,f])=>{if(st===s32){oscAt(t,"sine",f,0,0.55,0.075,bus,0.005);oscAt(t,"sine",f*2.01,0,0.25,0.015,bus,0.005);}});}
   }catch(e){}
 }
@@ -1246,23 +1362,33 @@ function updateSoundBtn(){const b=document.getElementById("g-sound");if(b)b.text
 
 // ===================== ゲーム進行 =====================
 function startGame(){
-  audioUnlock();updateSoundBtn();stopBGM(0.1);
-  const pool=gamePool();
-  if(pool.length<2){alert(gt("few"));return;}
+  audioUnlock();updateSoundBtn();stopBGM(0.1);try{ensureBGMBuf();}catch(e){}
+  if(gameMode==="weak"&&gamePool("weak").length<1)gameMode="all";
+  const pool=gamePool(gameMode);
+  if(pool.length<(gameMode==="weak"?1:2)){alert(gt("few"));return;}
   Object.assign(G,{
-    pool:shuffle(pool),pi:0,qn:0,score:0,shownScore:0,lives:3,combo:0,maxCombo:0,correct:0,missed:[],
+    pool:shuffle(pool),pi:0,qn:0,score:0,shownScore:0,lives:gameLives,combo:0,maxCombo:0,correct:0,missed:[],
     speed:0.085,phase:"ready",q:null,shipX:0.5,shipTarget:0.5,shipV:0,bullet:null,particles:[],rings:[],floaters:[],debris:[],
-    flash:null,last:0,paused:false,banner:null,fastest:0,shake:0,muzzle:0,shieldHit:0,time:0
+    flash:null,last:0,paused:false,banner:null,fastest:0,shake:0,muzzle:0,shieldHit:0,time:0,hits:{},graduated:[]
   });
   initScenery();
   showScreen("game");
   updateHud();
   resizeGameCanvas();
   const best=loadBest()[currentTopik]||0;
+  const nWeak=gamePool("weak").length;
   showGameOverlay(`<div class="g-logo">WORD<br>SHOOTER</div>
     <div class="hint">${gt("howto")}</div>
+    <div class="g-modes">
+      <button class="g-mode${gameMode==="all"?" active":""}" data-mode="all" onpointerdown="setGameMode('all',event)">${gt("modeAll")}</button>
+      <button class="g-mode${gameMode==="weak"?" active":""}${nWeak<1?" off":""}" data-mode="weak" onpointerdown="setGameMode('weak',event)">${gt("modeWeak").replace("{n}",nWeak)}</button>
+    </div>
+    <div class="g-modes lives">
+      <button class="g-mode${gameLives===3?" active":""}" data-lives="3" onpointerdown="setGameLives(3,event)">${gt("lives3")}</button>
+      <button class="g-mode${gameLives===5?" active":""}" data-lives="5" onpointerdown="setGameLives(5,event)">${gt("lives5")}</button>
+    </div>
     <div class="g-ctrl">${gt("ctrl")}</div>
-    <div class="g-best">TOPIK ${currentTopik} · ${gt("best")} ${best.toLocaleString()}</div>
+    <div class="g-best">${bestLabel()}</div>
     <div class="g-start">${gt("start")}</div>`);
   G.phase="ready";
   if(!G.raf) G.raf=requestAnimationFrame(gameLoop);
@@ -1289,7 +1415,7 @@ function nextQuestion(){
 }
 
 function updateHud(){
-  document.getElementById("g-lives").innerHTML=[0,1,2].map(i=>`<span class="life${i<G.lives?"":" lost"}">✈</span>`).join("");
+  document.getElementById("g-lives").innerHTML=Array.from({length:Math.max(gameLives,G.lives||0)},(_,i)=>i).map(i=>`<span class="life${i<G.lives?"":" lost"}">✈</span>`).join("");
 }
 
 function shoot(side){
@@ -1311,7 +1437,9 @@ function resolve(side,timeout){
   const S=gameSize();
   const ex=(i)=>({x:laneX(i)*S.w,y:enemyY(q.y)*S.h});
   if(ok){
-    G.combo++;G.maxCombo=Math.max(G.maxCombo,G.combo);G.correct++;
+    G.combo++;G.maxCombo=Math.max(G.maxCombo,G.combo);G.correct++;bgmSetHype(G.combo>=5);
+    if(gameMode==="weak"){const k=K(q.w);G.hits[k]=(G.hits[k]||0)+1;
+      if(G.hits[k]===2&&!G.graduated.includes(q.w)){G.graduated.push(q.w);const gp=ex(side);G.floaters.push({x:gp.x,y:gp.y-44,text:gt("graduated"),sub:"",t:0,color:"#4ade80"});}}
     // 早撃ちボーナス：タップまでの秒数が短いほど大きい（最大+400）
     const rt=q.reactT||0;
     const speedBonus=Math.round(400*Math.pow(Math.max(0,1-rt/2.5),2));
@@ -1328,7 +1456,7 @@ function resolve(side,timeout){
     G.speed=Math.min(G.speed*1.045,0.32);
     G.phase="after";G.afterT=0;G.afterDur=0.6;
   }else{
-    G.combo=0;G.lives--;
+    G.combo=0;G.lives--;bgmSetHype(false);
     if(!G.missed.includes(q.w)) G.missed.push(q.w);
     if(!timeout){explode(ex(side),"#ff5577",0.7);}
     q.hit=-1;q.showCorrect=true;
@@ -1355,12 +1483,12 @@ function endGame(){
   const st=curState();
   G.missed.forEach(w=>{st.weak[K(w)]=(st.weak[K(w)]||0)+1;delete st.mastered[K(w)];delete st.perfect[K(w)];});
   if(G.missed.length) saveState();
-  const best=loadBest();const prev=best[currentTopik]||0;const isRecord=G.score>prev;
+  const best=loadBest();const prev=best[currentTopik]||0;const isRecord=gameMode!=="weak"&&!isEasy()&&G.score>prev;
   if(isRecord){best[currentTopik]=G.score;saveBest(best);}
   document.getElementById("go-title").textContent=gt("over");
   document.getElementById("go-score").textContent=G.score.toLocaleString();
   const rec=document.getElementById("go-record");rec.textContent=gt("record");rec.style.display=isRecord&&G.score>0?"inline-block":"none";
-  document.getElementById("go-best").textContent="TOPIK "+currentTopik+" · "+gt("bestIs")+Math.max(prev,G.score).toLocaleString();
+  document.getElementById("go-best").textContent=gameMode==="weak"?gt("weakModeTitle"):isEasy()?gt("easyNote"):"TOPIK "+currentTopik+" · "+gt("bestIs")+Math.max(prev,G.score).toLocaleString();
   document.getElementById("go-correct").textContent=G.correct;
   document.getElementById("go-combo").textContent=G.maxCombo;
   document.getElementById("go-fast").innerHTML=G.fastest?G.fastest.toFixed(2)+'<small style="font-size:11px;margin-left:1px">'+gt("sec")+'</small>':"-";
@@ -1375,6 +1503,7 @@ function endGame(){
   if(G.missed.length){
     box.innerHTML=`<h4>${gt("missed")}</h4>`+G.missed.map(w=>`<div class="row"><b>${esc(w.ko)}</b><span>${esc(meaningOf(w))}</span></div>`).join("")+`<div class="note">${gt("added")}</div>`;
   }else box.innerHTML=`<h4>${gt("perfect")}</h4>`;
+  if(G.graduated&&G.graduated.length){box.innerHTML+=`<h4 style="margin-top:12px;color:#4ade80">${gt("graduatedList").replace("{n}",G.graduated.length)}</h4>`+G.graduated.map(w=>`<div class="row"><b>${esc(w.ko)}</b><span>${esc(meaningOf(w))}</span></div>`).join("");}
   showScreen("gameover");
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -1762,7 +1891,7 @@ function drawGame(){
   const stage=()=>document.getElementById("game-stage");
   document.addEventListener("pointerdown",e=>{
     const s=stage();if(!s||!document.getElementById("game").classList.contains("active"))return;
-    if(!s.contains(e.target))return;
+    if(!s.contains(e.target)||e.target.closest(".g-mode"))return;
     e.preventDefault();
     const r=s.getBoundingClientRect();
     shoot(e.clientX-r.left<r.width/2?0:1);
@@ -2026,7 +2155,7 @@ function startVTest(){
   const order=shuffle(qs);
   const nListen=Math.round(order.length*VT_LISTEN_RATE);
   order.forEach((q,i)=>{q.listen=i<nListen;q.choices=vtChoices(q.w);});
-  Object.assign(VT,{N,qs:shuffle(order),i:-1,res:[],timer:null,t0:0,answered:false});
+  Object.assign(VT,{N,qs:shuffle(order),i:-1,res:[],timer:null,t0:0,answered:false,active:true,run:(VT.run||0)+1});
   document.getElementById("vt-intro").style.display="none";
   document.getElementById("vt-q").style.display="flex";
   vtNext();
@@ -2034,6 +2163,7 @@ function startVTest(){
 
 function vtNext(){
   clearInterval(VT.timer);
+  if(!VT.active)return;
   VT.i++;
   if(VT.i>=VT.qs.length){vtFinish();return;}
   const q=VT.qs[VT.i];VT.answered=false;
@@ -2060,7 +2190,7 @@ function vtNext(){
   if(!q.listen)vtStartTimer();
 }
 function vtStartTimer(){
-  if(VT.started||VT.answered)return;VT.started=true;
+  if(!VT.active||VT.started||VT.answered)return;VT.started=true;
   const q=VT.qs[VT.i];const limit=q.listen?VT_TIME_LISTEN:VT_TIME;
   VT.t0=performance.now();
   const bar=document.getElementById("vt-timer");
@@ -2073,12 +2203,12 @@ function vtStartTimer(){
 }
 function vtSpeak(byTap){
   const q=VT.qs[VT.i];if(!q)return;
-  try{const u=koUtter(q.w.ko,0.9);u.onstart=()=>vtStartTimer();speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
+  try{const run=VT.run;const u=koUtter(q.w.ko,0.9);u.onstart=()=>{if(VT.active&&VT.run===run)vtStartTimer();};speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
   if(byTap){const b=document.getElementById("vt-play");if(b){b.classList.remove("big");b.textContent="🔊 "+vtt("replay");}setTimeout(vtStartTimer,600);}
 }
 
 function vtAnswer(ci){
-  if(VT.answered)return;VT.answered=true;clearInterval(VT.timer);
+  if(!VT.active||VT.answered)return;VT.answered=true;clearInterval(VT.timer);
   const q=VT.qs[VT.i];
   const correctIdx=q.choices.indexOf(q.w);
   const kind=ci===correctIdx?"r":(ci>=0?"w":"s");   // r=正解 w=不正解 s=わからない/時間切れ
@@ -2088,13 +2218,12 @@ function vtAnswer(ci){
   if(q.listen)document.getElementById("vt-word").innerHTML=`<div class="vt-ko">${esc(q.w.ko)}</div>`;
   try{if(kind==="r")sfx("beep");}catch(e){}
   const wait=kind==="r"?450:1100;
-  setTimeout(()=>{
-    // 次が聞き取り問題なら、タップの流れの中で読み上げられるよう少しでも早く進める
-    vtNext();
-  },wait);
+  const run=VT.run;
+  setTimeout(()=>{if(VT.active&&VT.run===run)vtNext();},wait);
 }
 
 function vtFinish(){
+  if(!VT.active)return;VT.active=false;clearInterval(VT.timer);
   const N=VT.N;const lines={};let knownTotal=0;
   const sizes={},pHat={};
   for(let l=1;l<=N;l++){
@@ -2149,7 +2278,7 @@ function vtFinish(){
     <button class="done-btn white" onclick="goHome()">${vtt("home")}</button>`;
   showScreen("vresult");res.scrollTop=0;
 }
-function quitVTest(){clearInterval(VT.timer);goHome();}
+function quitVTest(){VT.active=false;clearInterval(VT.timer);try{speechSynthesis.cancel();}catch(e){}goHome();}
 </script>
 </body>
 </html>
