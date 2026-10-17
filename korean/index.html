@@ -115,8 +115,8 @@ body{background:#1a1340;min-height:100%}
 .pos-badge{font-size:11px;background:#f3f0fb;color:#7c4fb0;padding:4px 12px;border-radius:99px;font-weight:600;margin-top:4px}
 .tap-hint{font-size:12px;color:#ccc;position:absolute;bottom:16px;font-weight:500}
 .example-wrap{display:flex;flex-direction:column;gap:6px;width:100%;max-width:420px}
-.example-box{background:#fdf6e3;border-radius:14px;padding:9px 16px;text-align:center;width:100%;min-height:18px}
-.example-box p{font-size:12.5px;color:#8a7a4e;margin:0;line-height:1.4}
+.example-box{background:#fdf6e3;border-radius:14px;padding:10px 14px;text-align:center;width:100%;min-height:18px}
+.example-box p{font-size:16px;color:#6b5a2e;margin:0;line-height:1.45;font-weight:500}
 
 .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:420px}
 .ans-btn{padding:16px;border-radius:16px;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:transform 0.1s;box-shadow:0 4px 12px rgba(0,0,0,0.18)}
@@ -145,6 +145,15 @@ body{background:#1a1340;min-height:100%}
 #home::before,#home::after{content:"";flex:1 0 0}
 .menu-btn.game-btn{background:linear-gradient(120deg,rgba(255,200,61,0.32),rgba(255,138,210,0.32));border-color:rgba(255,220,140,0.55)}
 .icon-game{background:rgba(255,200,61,0.45)}
+/* ===== ゲーム行 ===== */
+
+.game-row{display:flex;gap:10px}
+.game-row .menu-btn{flex:1;min-width:0}
+.game-row .game-btn{flex:1.2}
+.game-row .meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game-row .menu-btn{gap:10px;padding-left:12px;padding-right:10px}
+.game-row .menu-btn > div:last-child > div:first-child{white-space:nowrap;font-size:15px;letter-spacing:-0.3px}
+
 
 /* GAME */
 #game{gap:8px;padding-bottom:0}
@@ -336,7 +345,7 @@ body{background:#1a1340;min-height:100%}
   </div>
   <button class="menu-btn game-btn" onclick="startGame()">
     <div class="icon icon-game">🎮</div>
-    <div style="min-width:0"><div id="game-menu-title">ゲーム</div><div class="meta" id="game-menu-meta">単語シューティング</div></div>
+    <div style="min-width:0"><div id="game-menu-title">シューティング</div><div class="meta" id="game-menu-meta">まだ記録なし</div></div>
   </button>
   <button class="menu-btn vt-btn" onclick="openVTest()">
     <div class="icon icon-vt">📊</div>
@@ -558,6 +567,9 @@ async function init(){
   }
   loadState();
   buildKeys();
+  {const sel=loadSel();if(["1","2","3","4"].includes(sel.topik))currentTopik=sel.topik;
+   document.querySelectorAll(".topik-btn").forEach(b=>b.classList.toggle("active",b.dataset.topik===currentTopik));
+   currentLevel=(sel.lv&&sel.lv[currentTopik])||"all";}
   setTopikData();
   buildLevelBar();
   updateHome();
@@ -587,9 +599,10 @@ function setTopik(btn){
   document.querySelectorAll(".topik-btn").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
   document.getElementById("subtitle").textContent=t("subtitle").replace("{n}",currentTopik);
-  currentLevel="all";
+  currentLevel=(loadSel().lv||{})[currentTopik]||"all";
   setTopikData();
   buildLevelBar();
+  saveSel();
   updateHome();
 }
 
@@ -609,11 +622,15 @@ function setTopikData(){
   WORDS=ALL_WORDS.filter(w=>w.topik===currentTopik);
 }
 
+// 級ごとに最後に選んだレベルを覚えておく
+const SEL_KEY="kf_sel_v1";
+function loadSel(){try{return JSON.parse(localStorage.getItem(SEL_KEY))||{lv:{}};}catch(e){return {lv:{}};}}
+function saveSel(){try{const s=loadSel();s.topik=currentTopik;s.lv=s.lv||{};s.lv[currentTopik]=currentLevel;localStorage.setItem(SEL_KEY,JSON.stringify(s));}catch(e){}}
 function buildLevelBar(){
   const bar=document.getElementById("level-bar");
   bar.innerHTML="";
   const allBtn=document.createElement("button");
-  allBtn.className="lv-btn active";
+  allBtn.className="lv-btn";
   allBtn.dataset.lv="all";
   allBtn.textContent=t("levelAll");
   allBtn.onclick=function(){setLevel(this)};
@@ -627,10 +644,13 @@ function buildLevelBar(){
     btn.onclick=function(){setLevel(this)};
     bar.appendChild(btn);
   });
+  if(currentLevel!=="all"&&!levels.includes(currentLevel))currentLevel="all";
+  const act=bar.querySelector('.lv-btn[data-lv="'+currentLevel+'"]');
+  if(act){act.classList.add("active");requestAnimationFrame(()=>{try{bar.scrollLeft=Math.max(0,act.offsetLeft-bar.clientWidth/2+act.offsetWidth/2);}catch(e){}});}
 }
 
 function setLevel(btn){
-  currentLevel=btn.dataset.lv;
+  currentLevel=btn.dataset.lv;saveSel();
   document.querySelectorAll(".lv-btn").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
   updateHome();
@@ -660,17 +680,40 @@ function updateHome(){
   document.getElementById("review-meta").textContent=filtered.filter(w=>st.weak[K(w)]).length+unit+(toReviewMap[currentLang]||toReviewMap.ja);
   const newMap={ja:"・NEW {n}語",en:" · NEW {n}",zh:"・NEW {n}个"};
   document.getElementById("all-meta").textContent=shuffleWords.length+unit+(exclPerfectMap[currentLang]||exclPerfectMap.ja)+(newWords.length?(newMap[currentLang]||newMap.ja).replace("{n}",newWords.length):"");
-  document.getElementById("perfect-meta").textContent=Object.keys(st.perfect).length+unit;
+  document.getElementById("perfect-meta").textContent=Object.keys(st.perfect).length+unit+sessLabel("perfect");
+  document.getElementById("all-meta").textContent+=sessLabel("all");
+  document.getElementById("review-meta").textContent+=sessLabel("review");
   {const mMap={ja:"語（★なし）・忘れていたら苦手に戻る",en:" words (not ★) · wrong → review list",zh:"个（无★）・忘了就回到待复习"};
    const mt={ja:"一回覚えた",en:"Learned once",zh:"记过一次"};
    document.getElementById("mastered-menu-title").textContent=mt[currentLang]||mt.ja;
-   document.getElementById("mastered-meta").textContent=filtered.filter(w=>st.mastered[K(w)]&&!st.perfect[K(w)]).length+(mMap[currentLang]||mMap.ja);}
+   document.getElementById("mastered-meta").textContent=filtered.filter(w=>st.mastered[K(w)]&&!st.perfect[K(w)]).length+(mMap[currentLang]||mMap.ja)+sessLabel("mastered");}
   if(typeof updateGameMenu==="function") updateGameMenu();
-  if(typeof updateRPGMenu==="function") updateRPGMenu();
+  if(typeof updateMatchMenu==="function") updateMatchMenu();
   if(typeof updateVTMenu==="function") updateVTMenu();
   if(typeof applyBkLang==="function") applyBkLang();
 }
 
+// ---- 学習の途中経過を保存（同じメニュー・級・レベルを開くと続きから）----
+const SESS_KEY="kf_sess_v1";
+let deckMode="all";
+function sessAll(){try{return JSON.parse(localStorage.getItem(SESS_KEY))||{};}catch(e){return {};}}
+function sessId(mode){return mode+"|"+currentTopik+"|"+currentLevel;}
+function getSess(mode){const ss=sessAll()[sessId(mode)];return ss&&ss.idx>0&&ss.idx<ss.keys.length?ss:null;}
+function saveSess(){
+  try{const all=sessAll(),id=sessId(deckMode);
+    if(idx<=0||idx>=deck.length)delete all[id];
+    else all[id]={keys:deck.map(K),idx,ok:okCount,ng:ngList.map(K),t:Date.now()};
+    localStorage.setItem(SESS_KEY,JSON.stringify(all));}catch(e){}
+}
+function resumeSess(mode){
+  const ss=getSess(mode);if(!ss)return false;
+  const map=new Map(WORDS.map(w=>[K(w),w]));
+  const d=ss.keys.map(k=>map.get(k)).filter(Boolean);if(d.length<2)return false;
+  const before=ss.keys.slice(0,ss.idx).filter(k=>map.has(k)).length;
+  deck=d;idx=Math.min(before,d.length-1);okCount=ss.ok||0;ngList=(ss.ng||[]).map(k=>map.get(k)).filter(Boolean);undoStack=[];
+  showScreen("study");renderCard();return true;
+}
+function sessLabel(mode){const ss=getSess(mode);return ss?"　▶ 続き "+(ss.idx+1)+"/"+ss.keys.length:"";}
 function startNew(){
   isPerfectMode=false;
   const st=curState();
@@ -681,21 +724,21 @@ function startNew(){
   startDeck(words);
 }
 function startMastered(){
-  isPerfectMode=false;
+  isPerfectMode=false;deckMode="mastered";if(resumeSess(deckMode))return;
   const st=curState();
   const words=getFiltered().filter(w=>st.mastered[K(w)]&&!st.perfect[K(w)]);
   if(words.length===0){alert("一回覚えた単語がまだありません");return;}
   startDeck(words);
 }
 function startReview(){
-  isPerfectMode=false;
+  isPerfectMode=false;deckMode="review";if(resumeSess(deckMode))return;
   const st=curState();
   const words=getFiltered().filter(w=>st.weak[K(w)]);
   if(words.length===0){alert("要復習の単語がありません");return;}
   startDeck(words);
 }
 function startAll(){
-  isPerfectMode=false;
+  isPerfectMode=false;deckMode="all";if(resumeSess(deckMode))return;
   const st=curState();
   const words=getFiltered().filter(w=>!st.perfect[K(w)]);
   if(words.length===0){alert("すべて完璧な単語です！");return;}
@@ -706,6 +749,7 @@ function startAll(){
   showScreen("study");renderCard();
 }
 function startPerfect(){
+  deckMode="perfect";isPerfectMode=true;if(resumeSess(deckMode))return;
   const st=curState();
   const words=getFiltered().filter(w=>st.perfect[K(w)]);
   if(words.length===0){alert("完璧な単語がまだありません");return;}
@@ -760,6 +804,7 @@ function retryDeck(){startDeck([...deck]);}
 function reviewWrong(){if(ngList.length>0)startDeck([...ngList]);}
 
 function renderCard(){
+  saveSess();
   if(idx>=deck.length){showDone();return;}
   const cardEl=document.getElementById("card");
   const wasFlipped=cardEl.classList.contains("flipped");
@@ -1050,9 +1095,9 @@ function t(key){
 function applyLangToUI(){
   document.getElementById("app-title").textContent=t("appTitle");
   document.getElementById("new-meta").dataset.base=t("menuNewMeta");
-  document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn):not(.mastered-btn):not(.rpg-btn)")[0].querySelector("div > div").textContent=t("menuAllTitle");
-  document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn):not(.mastered-btn):not(.rpg-btn)")[1].querySelector("div > div").textContent=t("menuReviewTitle");
-  document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn):not(.mastered-btn):not(.rpg-btn)")[2].querySelector("div > div").textContent=t("menuPerfectTitle");
+  document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn):not(.mastered-btn):not(.match-btn)")[0].querySelector("div > div").textContent=t("menuAllTitle");
+  document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn):not(.mastered-btn):not(.match-btn)")[1].querySelector("div > div").textContent=t("menuReviewTitle");
+  document.querySelectorAll(".menu-btn:not(.game-btn):not(.vt-btn):not(.mastered-btn):not(.match-btn)")[2].querySelector("div > div").textContent=t("menuPerfectTitle");
   document.getElementById("similar-menu-title").textContent=t("menuSimilarTitle");
   document.getElementById("similar-menu-meta").textContent=t("menuSimilarMeta");
   document.getElementById("similar-screen-title").textContent=t("similarScreenTitle");
@@ -1127,7 +1172,7 @@ init();
 // ===================== 単語シューティング =====================
 const GAME_KEY="kf_game_v1";
 const G_TEXT={
-  ja:{menu:"ゲーム",sub:"単語シューティング",best:"ハイスコア",none:"まだ記録なし",howto:"韓国語の正しい意味を撃ち抜け！<br>⚡ 早く撃つほど高得点",ctrl:"画面の左右をタップ（キーボードは ← →）",start:"TAP TO START",over:"ゲームオーバー",record:"🏆 ハイスコア更新！",bestIs:"ハイスコア ",correct:"正解",combo:"最大コンボ",miss:"ミス",missed:"間違えた単語",added:"↑ 苦手リストに追加しました",perfect:"ノーミス！",retry:"もう一度",home:"ホームに戻る",few:"このレベルは単語が少なすぎます",paused:"一時停止中<br>タップで再開",answer:"正解",godspeed:"神速！",quick:"早撃ち！",sec:"秒",fastest:"最速",modeAll:"全部",modeWeak:"苦手だけ（{n}語）",weakModeDesc:"苦手 {n}語だけが出ます",weakModeTitle:"苦手モード（ハイスコア対象外）",graduated:"2回目！",graduatedList:"✌️ 2回以上当てた単語 {n}語（カードで確認して「覚えた」へ）",allClear:"🎓 苦手ぜんぶ卒業！",lives3:"✈ 3機",lives5:"✈ 5機（イージー）",easyNote:"イージー（ハイスコア対象外）"},
+  ja:{menu:"シューティング",sub:"単語シューティング",best:"ハイスコア",none:"まだ記録なし",howto:"韓国語の正しい意味を撃ち抜け！<br>⚡ 早く撃つほど高得点",ctrl:"画面の左右をタップ（キーボードは ← →）",start:"TAP TO START",over:"ゲームオーバー",record:"🏆 ハイスコア更新！",bestIs:"ハイスコア ",correct:"正解",combo:"最大コンボ",miss:"ミス",missed:"間違えた単語",added:"↑ 苦手リストに追加しました",perfect:"ノーミス！",retry:"もう一度",home:"ホームに戻る",few:"このレベルは単語が少なすぎます",paused:"一時停止中<br>タップで再開",answer:"正解",godspeed:"神速！",quick:"早撃ち！",sec:"秒",fastest:"最速",modeAll:"全部",modeWeak:"苦手だけ（{n}語）",weakModeDesc:"苦手 {n}語だけが出ます",weakModeTitle:"苦手モード（ハイスコア対象外）",graduated:"2回目！",graduatedList:"✌️ 2回以上当てた単語 {n}語（カードで確認して「覚えた」へ）",allClear:"🎓 苦手ぜんぶ卒業！",lives3:"✈ 3機",lives5:"✈ 5機（イージー）",easyNote:"イージー（ハイスコア対象外）"},
   en:{menu:"Game",sub:"Word Shooter",best:"High score",none:"No record yet",howto:"Shoot the correct meaning!<br>⚡ Faster shots score more",ctrl:"Tap left/right (keyboard: ← →)",start:"TAP TO START",over:"Game Over",record:"🏆 New high score!",bestIs:"High score ",correct:"Correct",combo:"Max combo",miss:"Misses",missed:"Words you missed",added:"↑ Added to your review list",perfect:"No misses!",retry:"Play again",home:"Back to home",few:"Not enough words in this level",paused:"Paused<br>Tap to resume",answer:"Answer",godspeed:"Lightning!",quick:"Quick!",sec:"s",fastest:"Fastest",modeAll:"All words",modeWeak:"Weak only ({n})",weakModeDesc:"Only your {n} weak words",weakModeTitle:"Weak mode (no high score)",graduated:"Twice!",graduatedList:"✌️ Hit twice or more: {n} (confirm with cards)",allClear:"🎓 All weak words cleared!",lives3:"✈ 3 lives",lives5:"✈ 5 lives (easy)",easyNote:"Easy mode (no high score)"},
   zh:{menu:"游戏",sub:"单词射击",best:"最高分",none:"暂无记录",howto:"击中正确的意思！<br>⚡ 越快得分越高",ctrl:"点击屏幕左右（键盘 ← →）",start:"TAP TO START",over:"游戏结束",record:"🏆 刷新最高分！",bestIs:"最高分 ",correct:"正确",combo:"最大连击",miss:"失误",missed:"答错的单词",added:"↑ 已加入待复习列表",perfect:"零失误！",retry:"再玩一次",home:"返回首页",few:"该级别单词太少",paused:"已暂停<br>点击继续",answer:"正确答案",godspeed:"神速！",quick:"快枪手！",sec:"秒",fastest:"最快",modeAll:"全部",modeWeak:"只练弱项（{n}）",weakModeDesc:"只出 {n} 个弱项单词",weakModeTitle:"弱项模式（不计最高分）",graduated:"第2次！",graduatedList:"✌️ 击中2次以上 {n}个（请用卡片确认）",allClear:"🎓 弱项全部毕业！",lives3:"✈ 3条命",lives5:"✈ 5条命（简单）",easyNote:"简单模式（不计最高分）"}
 };
@@ -1140,7 +1185,7 @@ function updateGameMenu(){
   const el=document.getElementById("game-menu-title"); if(!el)return;
   el.textContent=gt("menu");
   const b=loadBest()[currentTopik];
-  document.getElementById("game-menu-meta").textContent=b?gt("best")+" "+b.toLocaleString():(currentLang==="ja"?"シューティング":gt("sub"));
+  document.getElementById("game-menu-meta").textContent=b?gt("best")+" "+b.toLocaleString():gt("none");
 }
 
 const G={};  // game state
@@ -1288,11 +1333,11 @@ const BGM_BARS=8,BGM_LEN=BGM_BARS*16*BGM_STEP;
 setTimeout(()=>{try{ensureBGMBuf("shoot");}catch(e){}},1500);   // 起動して少ししたら先に作っておく
 // 今BGMを鳴らすべき場面か（割り込みからの復帰用）
 function bgmShouldPlay(){
-  if(typeof RPG!=="undefined"&&RPG.active&&RPG.music)return true;
+  if(typeof MT!=="undefined"&&MT.active)return true;
   return typeof G!=="undefined"&&(G.phase==="play"||G.phase==="count"||G.phase==="after")&&!G.paused&&document.getElementById("game").classList.contains("active");
 }
 function songDef(name){
-  return name==="rpg"?{bars:RPG_BARS,step:RPG_STEP,len:RPG_LEN,fn:rpgStep,lpf:3200}:{bars:BGM_BARS,step:BGM_STEP,len:BGM_LEN,fn:bgmStep,lpf:2200};
+  return name==="match"?{bars:MT_BARS,step:MT_STEP,len:MT_LEN,fn:mtStep,lpf:3200}:{bars:BGM_BARS,step:BGM_STEP,len:BGM_LEN,fn:bgmStep,lpf:2200};
 }
 function renderBGM(hype,sr,name){
   const d=songDef(name);
@@ -1329,7 +1374,6 @@ function startBGM(name){
     const mk=(bf,g)=>{const sN=c.createBufferSource();sN.buffer=bf;sN.loop=true;sN.loopStart=0;sN.loopEnd=len;sN.connect(g);sN.start(t);return sN;};
     BGM.srcA=mk(buf.a,BGM.gA);BGM.srcB=mk(buf.b,BGM.gB);
     BGM.src=true;BGM.hype=false;
-    if(name==="rpg"&&typeof RPG!=="undefined"&&RPG.mon&&RPG.mon.boss)bgmSetHype(true);
     SND.lastCT=-1;SND.stuckSince=0;
     if(BGM.timer)clearInterval(BGM.timer);BGM.timer=setInterval(bgmWatch,500);
   }catch(e){console.error(e);BGM.src=null;}
@@ -1391,7 +1435,7 @@ function toggleSound(){
   if(SND.on){audioUnlock();sfx("beep");if(bgmShouldPlay())startBGM(BGM.song);}
   else{try{speechSynthesis.cancel();}catch(e){}stopBGM(0.1);}
 }
-function updateSoundBtn(){["g-sound","r-sound"].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent=SND.on?"🔊":"🔇";});}
+function updateSoundBtn(){["g-sound","m-sound"].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent=SND.on?"🔊":"🔇";});}
 
 // ===================== ゲーム進行 =====================
 function startGame(){
@@ -1979,8 +2023,8 @@ function openBackup(){
   closeSettings();
   let game={};try{game=JSON.parse(localStorage.getItem("kf_game_v1"))||{};}catch(e){}
   let vtest=[];try{vtest=JSON.parse(localStorage.getItem("kf_vtest_v1"))||[];}catch(e){}
-  let rpg=null;try{rpg=JSON.parse(localStorage.getItem("kf_rpg_v1"));}catch(e){}
-  const payload={v:1,t:Date.now(),state,game,vtest,rpg};
+  let match={};try{match=JSON.parse(localStorage.getItem("kf_match_v1"))||{};}catch(e){}
+  const payload={v:1,t:Date.now(),state,game,vtest,match};
   document.getElementById("bk-code").value="KFB1:"+b64enc(JSON.stringify(payload));
   document.getElementById("bk-title").textContent=bt("bkTitle");
   document.getElementById("bk-desc").innerHTML=bt("bkDesc")+'<div class="bk-sum">'+levelSummary(state)+'</div>';
@@ -2047,10 +2091,10 @@ function doRestore(){
     const seen=new Set(h.map(x=>x.t));data.vtest.forEach(x=>{if(x&&x.t&&!seen.has(x.t))h.push(x);});
     h.sort((a,b)=>a.t-b.t);try{localStorage.setItem("kf_vtest_v1",JSON.stringify(h.slice(-50)));}catch(e){}
   }
-  if(data.rpg&&typeof data.rpg==="object"){
-    let cur=null;try{cur=JSON.parse(localStorage.getItem("kf_rpg_v1"));}catch(e){}
-    const better=!cur||(Number(data.rpg.lv)||0)>(Number(cur.lv)||0)||((Number(data.rpg.lv)||0)===(Number(cur.lv)||0)&&(Number(data.rpg.exp)||0)>(Number(cur.exp)||0));
-    if(better){try{localStorage.setItem("kf_rpg_v1",JSON.stringify(data.rpg));}catch(e){}}
+  if(data.match&&typeof data.match==="object"){
+    let m={};try{m=JSON.parse(localStorage.getItem("kf_match_v1"))||{};}catch(e){}
+    Object.entries(data.match).forEach(([k,v])=>{v=Number(v)||0;if(!v)return;if(k.startsWith("sp|"))m[k]=m[k]?Math.min(m[k],v):v;else m[k]=Math.max(m[k]||0,v);});
+    try{localStorage.setItem("kf_match_v1",JSON.stringify(m));}catch(e){}
   }
   if(data.game&&typeof data.game==="object"){
     let g={};try{g=JSON.parse(localStorage.getItem("kf_game_v1"))||{};}catch(e){}
@@ -2318,6 +2362,8 @@ function vtFinish(){
   showScreen("vresult");res.scrollTop=0;
 }
 function quitVTest(){VT.active=false;clearInterval(VT.timer);try{speechSynthesis.cancel();}catch(e){}goHome();}
+
+
 
 
 </script>
