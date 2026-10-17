@@ -317,7 +317,8 @@ body{background:#1a1340;min-height:100%}
 .pos-badge{background:#fbeeee;color:#b3202e}
 .prog-fill{background:#e2404b}
 .example-box{background:#fbf1dc}
-.example-box p{color:#6e5530;font-size:13px}
+.example-box{padding:10px 14px}
+.example-box p{color:#6e5530;font-size:16px;line-height:1.45;font-weight:500}
 .done-btn.white{color:#14234a}
 .similar-group .similar-ko{font-family:-apple-system,"Hiragino Sans",sans-serif}
 .similar-item .similar-w{color:#fff;font-size:16px;font-weight:700;font-family:-apple-system,"Hiragino Sans",sans-serif;min-width:64px}
@@ -333,6 +334,14 @@ html,body{height:100%;height:100dvh}
 .g-mode.active{background:#fff;color:#b3202e}
 .g-mode.off{opacity:0.35;cursor:default}
 .new-badge{position:absolute;top:14px;left:16px;background:linear-gradient(90deg,#c41e2e,#e8a23c);color:#fff;font-size:11px;font-weight:900;letter-spacing:1px;padding:4px 10px;border-radius:99px;box-shadow:0 2px 8px rgba(196,30,46,0.35)}
+.undo-btn{background:rgba(255,255,255,0.18);border:none;font-size:17px;padding:7px 11px;cursor:pointer;color:#fff;border-radius:10px;line-height:1}
+.undo-btn:disabled{opacity:0.3;cursor:default}
+.g-modes.lives{margin-top:8px}
+.icon-mastered{background:rgba(74,222,128,0.3)}
+.vt-modes{display:flex;gap:8px;background:rgba(255,255,255,0.1);padding:4px;border-radius:99px;border:1px solid rgba(255,255,255,0.25)}
+.vt-mode{border:none;background:transparent;color:rgba(255,255,255,0.75);font-weight:800;font-size:13px;padding:9px 16px;border-radius:99px;cursor:pointer}
+.vt-mode.active{background:#fff;color:#b3202e}
+.vt-easy-tag{display:inline-block;font-size:11px;font-weight:800;color:#14234a;background:#ffd76a;border-radius:99px;padding:2px 8px;margin-left:6px;vertical-align:middle}
 
 </style>
 </head>
@@ -371,7 +380,7 @@ html,body{height:100%;height:100dvh}
   </div>
   <button class="menu-btn game-btn" onclick="startGame()">
     <div class="icon icon-game">🎮</div>
-    <div><div id="game-menu-title">게임</div><div class="meta" id="game-menu-meta">단어 슈팅</div></div>
+    <div><div id="game-menu-title">슈팅</div><div class="meta" id="game-menu-meta">아직 기록 없음</div></div>
   </button>
   <button class="menu-btn vt-btn" onclick="openVTest()">
     <div class="icon icon-vt">📊</div>
@@ -385,6 +394,10 @@ html,body{height:100%;height:100dvh}
   <button class="menu-btn" onclick="startReview()">
     <div class="icon icon-review">↺</div>
     <div><div>약한 단어 복습</div><div class="meta" id="review-meta"></div></div>
+  </button>
+  <button class="menu-btn mastered-btn" onclick="startMastered()">
+    <div class="icon icon-mastered">✓</div>
+    <div><div>한 번 외운 단어</div><div class="meta" id="mastered-meta">잊었으면 약한 단어로</div></div>
   </button>
   <button class="menu-btn" onclick="startPerfect()">
     <div class="icon icon-perfect">★</div>
@@ -410,6 +423,7 @@ html,body{height:100%;height:100dvh}
     <button class="back-btn" onclick="goHome()">✕</button>
     <div class="prog-wrap"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
     <div class="prog-label"><span id="prog-cur">1</span>/<span id="prog-total">1</span></div>
+    <button class="undo-btn" id="undo-btn" onclick="undoCard()" title="하나 뒤로" disabled>↩</button>
   </div>
   <div class="card-area">
     <div class="example-wrap">
@@ -537,45 +551,83 @@ function updateHome(){
   document.getElementById("review-meta").textContent=cnt(st.weak)+"개 복습 필요";
   const nNew=f.filter(w=>!st.mastered[K(w)]&&!st.weak[K(w)]).length;
   document.getElementById("all-meta").textContent=f.filter(w=>!st.perfect[K(w)]).length+"개 (완벽한 단어 제외)"+(nNew?" · NEW "+nNew+"개":"");
-  document.getElementById("perfect-meta").textContent=cnt(st.perfect)+"개";
+  document.getElementById("perfect-meta").textContent=cnt(st.perfect)+"개"+sessLabel("perfect");
+  document.getElementById("all-meta").textContent+=sessLabel("all");
+  document.getElementById("review-meta").textContent+=sessLabel("review");
+  document.getElementById("mastered-meta").textContent=f.filter(w=>st.mastered[K(w)]&&!st.perfect[K(w)]).length+"개 (★ 없음) · 잊었으면 약한 단어로"+sessLabel("mastered");
   if(typeof updateGameMenu==="function") updateGameMenu();
   if(typeof updateVTMenu==="function") updateVTMenu();
 }
 
 // ===================== 単語カード =====================
-function startNew(){
-  isPerfectMode=false;
-  const f=getFiltered();
-  let words=f.filter(w=>!state.mastered[K(w)]&&!state.weak[K(w)]);
-  if(!words.length) words=f.filter(w=>!state.mastered[K(w)]);
-  if(!words.length){alert("이 레벨은 모두 외웠습니다! 복습 모드를 이용하세요");return;}
+// ---- 途中経過を保存（同じメニュー・級を開くと続きから）----
+const SESS_KEY="jpcard_sess_v1";
+let deckMode="all",undoStack=[];
+function sessAll(){try{return JSON.parse(localStorage.getItem(SESS_KEY))||{};}catch(e){return {};}}
+function sessId(mode){return mode+"|"+currentTopik;}
+function getSess(mode){const ss=sessAll()[sessId(mode)];return ss&&ss.idx>0&&ss.idx<ss.keys.length?ss:null;}
+function saveSess(){
+  try{const all=sessAll(),id=sessId(deckMode);
+    if(idx<=0||idx>=deck.length)delete all[id];
+    else all[id]={keys:deck.map(K),idx,ok:okCount,ng:ngList.map(K),t:Date.now()};
+    localStorage.setItem(SESS_KEY,JSON.stringify(all));}catch(e){}
+}
+function resumeSess(mode){
+  const ss=getSess(mode);if(!ss)return false;
+  const map=new Map(WORDS.map(w=>[K(w),w]));
+  const d=ss.keys.map(k=>map.get(k)).filter(Boolean);if(d.length<2)return false;
+  const before=ss.keys.slice(0,ss.idx).filter(k=>map.has(k)).length;
+  deck=d;idx=Math.min(before,d.length-1);okCount=ss.ok||0;ngList=(ss.ng||[]).map(k=>map.get(k)).filter(Boolean);undoStack=[];
+  showScreen("study");renderCard();return true;
+}
+function sessLabel(mode){const ss=getSess(mode);return ss?"　▶ 이어서 "+(ss.idx+1)+"/"+ss.keys.length:"";}
+function updateUndoBtn(){const b=document.getElementById("undo-btn");if(b)b.disabled=undoStack.length===0;}
+// ひとつ前のカードに戻る（直前の判定も取り消す）
+function undoCard(){
+  if(!undoStack.length)return;
+  const h=undoStack.pop();
+  if(h.k){
+    ["mastered","weak","perfect"].forEach(f=>{if(h.prev[f]===undefined)delete state[f][h.k];else state[f][h.k]=h.prev[f];});
+    if(h.ok)okCount=Math.max(0,okCount-1);else{const i=ngList.lastIndexOf(h.w);if(i>=0)ngList.splice(i,1);}
+    saveState();
+  }
+  idx=h.idx;
+  if(!document.getElementById("study").classList.contains("active"))showScreen("study");
+  renderCard();
+}
+function startMastered(){
+  isPerfectMode=false;deckMode="mastered";if(resumeSess(deckMode))return;
+  const words=getFiltered().filter(w=>state.mastered[K(w)]&&!state.perfect[K(w)]);
+  if(!words.length){alert("한 번 외운 단어가 아직 없습니다");return;}
   startDeck(words);
 }
 function startReview(){
-  isPerfectMode=false;
+  isPerfectMode=false;deckMode="review";if(resumeSess(deckMode))return;
   const words=getFiltered().filter(w=>state.weak[K(w)]);
   if(!words.length){alert("복습할 단어가 없습니다");return;}
   startDeck(words);
 }
 function startAll(){
-  isPerfectMode=false;
+  isPerfectMode=false;deckMode="all";if(resumeSess(deckMode))return;
   const words=getFiltered().filter(w=>!state.perfect[K(w)]);
   if(!words.length){alert("모두 완벽한 단어입니다!");return;}
   // 未学習（NEW）を先に、そのあと学習済みをランダムに
   const isNew=w=>!state.mastered[K(w)]&&!state.weak[K(w)];
-  deck=[...shuffle(words.filter(isNew)),...shuffle(words.filter(w=>!isNew(w)))];idx=0;ngList=[];okCount=0;
+  deck=[...shuffle(words.filter(isNew)),...shuffle(words.filter(w=>!isNew(w)))];idx=0;ngList=[];okCount=0;undoStack=[];
   showScreen("study");renderCard();
 }
 function startPerfect(){
+  deckMode="perfect";isPerfectMode=true;if(resumeSess(deckMode))return;
   const words=getFiltered().filter(w=>state.perfect[K(w)]);
   if(!words.length){alert("아직 완벽한 단어가 없습니다");return;}
   isPerfectMode=true;startDeck(words);
 }
-function startDeck(words){deck=shuffle(words);idx=0;ngList=[];okCount=0;showScreen("study");renderCard();}
+function startDeck(words){deck=shuffle(words);idx=0;ngList=[];okCount=0;undoStack=[];showScreen("study");renderCard();}
 function retryDeck(){startDeck([...deck]);}
 function reviewWrong(){if(ngList.length)startDeck([...ngList]);}
 
 function renderCard(){
+  saveSess();
   if(idx>=deck.length){showDone();return;}
   const cardEl=document.getElementById("card");
   const wasFlipped=cardEl.classList.contains("flipped");
@@ -595,14 +647,14 @@ function renderCard(){
     document.getElementById("btn-ok").disabled=true;
     document.getElementById("btn-ng").disabled=true;
     document.querySelector(".btn-row").style.display=isPerfectMode?"none":"grid";
-    updateStarUI();
+    updateStarUI();updateUndoBtn();
   }
   flipped=false;cardEl.classList.remove("flipped");
   if(wasFlipped)setTimeout(fill,400);else fill();
 }
 function flipCard(){
   if(idx>=deck.length)return;
-  if(isPerfectMode&&flipped){idx++;renderCard();return;}
+  if(isPerfectMode&&flipped){undoStack.push({idx,w:deck[idx],k:null});if(undoStack.length>50)undoStack.shift();idx++;renderCard();return;}
   flipped=!flipped;
   document.getElementById("card").classList.toggle("flipped",flipped);
   const w=deck[idx];
@@ -627,6 +679,7 @@ function updateStarUI(){
 }
 function answer(ok){
   const w=deck[idx],k=K(w);
+  undoStack.push({idx,w,k,ok,prev:{mastered:state.mastered[k],weak:state.weak[k],perfect:state.perfect[k]}});if(undoStack.length>50)undoStack.shift();
   if(ok){okCount++;state.mastered[k]=true;delete state.weak[k];}
   else{ngList.push(w);state.weak[k]=(state.weak[k]||0)+1;delete state.mastered[k];delete state.perfect[k];}
   saveState();idx++;renderCard();
@@ -667,10 +720,10 @@ function speak(){
 // ===================== 単語シューティング =====================
 const GAME_KEY="jpcard_game_v1";
 const G_TEXT={
-  ko:{menu:"게임",sub:"단어 슈팅",best:"최고 기록",none:"아직 기록 없음",howto:"일본어 단어의 올바른 뜻을 쏴라!<br>⚡ 빨리 쏠수록 고득점",ctrl:"화면 왼쪽/오른쪽을 탭 (키보드 ← →)",start:"TAP TO START",over:"게임 오버",record:"🏆 최고 기록 갱신!",bestIs:"최고 기록 ",correct:"정답",combo:"최대 콤보",miss:"실수",missed:"틀린 단어",added:"↑ 복습 목록에 추가했습니다",perfect:"노미스!",retry:"다시 하기",home:"홈으로",few:"단어가 부족합니다",paused:"일시정지<br>탭하면 계속",answer:"정답",godspeed:"신속!",quick:"속사!",sec:"초",fastest:"최고 속도",modeAll:"전체",modeWeak:"약한 단어만 ({n}개)",weakModeDesc:"약한 단어 {n}개만 나옵니다",weakModeTitle:"약한 단어 모드 (최고 기록 제외)",graduated:"2번째!",graduatedList:"✌️ 2번 이상 맞힌 단어 {n}개 (카드로 확인하고 「외웠다」로)"},
-  ja:{menu:"ゲーム",sub:"単語シューティング",best:"ハイスコア",none:"まだ記録なし",howto:"韓国語の正しい意味を撃ち抜け！<br>⚡ 早く撃つほど高得点",ctrl:"画面の左右をタップ（キーボードは ← →）",start:"TAP TO START",over:"ゲームオーバー",record:"🏆 ハイスコア更新！",bestIs:"ハイスコア ",correct:"正解",combo:"最大コンボ",miss:"ミス",missed:"間違えた単語",added:"↑ 苦手リストに追加しました",perfect:"ノーミス！",retry:"もう一度",home:"ホームに戻る",few:"このレベルは単語が少なすぎます",paused:"一時停止中<br>タップで再開",answer:"正解",godspeed:"神速！",quick:"早撃ち！",sec:"秒",fastest:"最速"},
-  en:{menu:"Game",sub:"Word Shooter",best:"High score",none:"No record yet",howto:"Shoot the correct meaning!<br>⚡ Faster shots score more",ctrl:"Tap left/right (keyboard: ← →)",start:"TAP TO START",over:"Game Over",record:"🏆 New high score!",bestIs:"High score ",correct:"Correct",combo:"Max combo",miss:"Misses",missed:"Words you missed",added:"↑ Added to your review list",perfect:"No misses!",retry:"Play again",home:"Back to home",few:"Not enough words in this level",paused:"Paused<br>Tap to resume",answer:"Answer",godspeed:"Lightning!",quick:"Quick!",sec:"s",fastest:"Fastest"},
-  zh:{menu:"游戏",sub:"单词射击",best:"最高分",none:"暂无记录",howto:"击中正确的意思！<br>⚡ 越快得分越高",ctrl:"点击屏幕左右（键盘 ← →）",start:"TAP TO START",over:"游戏结束",record:"🏆 刷新最高分！",bestIs:"最高分 ",correct:"正确",combo:"最大连击",miss:"失误",missed:"答错的单词",added:"↑ 已加入待复习列表",perfect:"零失误！",retry:"再玩一次",home:"返回首页",few:"该级别单词太少",paused:"已暂停<br>点击继续",answer:"正确答案",godspeed:"神速！",quick:"快枪手！",sec:"秒",fastest:"最快"}
+  ko:{menu:"슈팅",sub:"단어 슈팅",best:"최고 기록",none:"아직 기록 없음",howto:"일본어 단어의 올바른 뜻을 쏴라!<br>⚡ 빨리 쏠수록 고득점",ctrl:"화면 왼쪽/오른쪽을 탭 (키보드 ← →)",start:"TAP TO START",over:"게임 오버",record:"🏆 최고 기록 갱신!",bestIs:"최고 기록 ",correct:"정답",combo:"최대 콤보",miss:"실수",missed:"틀린 단어",added:"↑ 복습 목록에 추가했습니다",perfect:"노미스!",retry:"다시 하기",home:"홈으로",few:"단어가 부족합니다",paused:"일시정지<br>탭하면 계속",answer:"정답",godspeed:"신속!",quick:"속사!",sec:"초",fastest:"최고 속도",modeAll:"전체",modeWeak:"약한 단어만 ({n}개)",weakModeDesc:"약한 단어 {n}개만 나옵니다",weakModeTitle:"약한 단어 모드 (최고 기록 제외)",graduated:"2번째!",graduatedList:"✌️ 2번 이상 맞힌 단어 {n}개 (카드로 확인하고 「외웠다」로)",allClear:"🎓 약한 단어 전부 졸업!",lives3:"✈ 3기",lives5:"✈ 5기 (쉬움)",easyNote:"쉬움 모드 (최고 기록 제외)"},
+  ja:{menu:"シューティング",sub:"単語シューティング",best:"ハイスコア",none:"まだ記録なし",howto:"韓国語の正しい意味を撃ち抜け！<br>⚡ 早く撃つほど高得点",ctrl:"画面の左右をタップ（キーボードは ← →）",start:"TAP TO START",over:"ゲームオーバー",record:"🏆 ハイスコア更新！",bestIs:"ハイスコア ",correct:"正解",combo:"最大コンボ",miss:"ミス",missed:"間違えた単語",added:"↑ 苦手リストに追加しました",perfect:"ノーミス！",retry:"もう一度",home:"ホームに戻る",few:"このレベルは単語が少なすぎます",paused:"一時停止中<br>タップで再開",answer:"正解",godspeed:"神速！",quick:"早撃ち！",sec:"秒",fastest:"最速",modeAll:"全部",modeWeak:"苦手だけ（{n}語）",weakModeDesc:"苦手 {n}語だけが出ます",weakModeTitle:"苦手モード（ハイスコア対象外）",graduated:"2回目！",graduatedList:"✌️ 2回以上当てた単語 {n}語（カードで確認して「覚えた」へ）",allClear:"🎓 苦手ぜんぶ卒業！",lives3:"✈ 3機",lives5:"✈ 5機（イージー）",easyNote:"イージー（ハイスコア対象外）"},
+  en:{menu:"Game",sub:"Word Shooter",best:"High score",none:"No record yet",howto:"Shoot the correct meaning!<br>⚡ Faster shots score more",ctrl:"Tap left/right (keyboard: ← →)",start:"TAP TO START",over:"Game Over",record:"🏆 New high score!",bestIs:"High score ",correct:"Correct",combo:"Max combo",miss:"Misses",missed:"Words you missed",added:"↑ Added to your review list",perfect:"No misses!",retry:"Play again",home:"Back to home",few:"Not enough words in this level",paused:"Paused<br>Tap to resume",answer:"Answer",godspeed:"Lightning!",quick:"Quick!",sec:"s",fastest:"Fastest",modeAll:"All words",modeWeak:"Weak only ({n})",weakModeDesc:"Only your {n} weak words",weakModeTitle:"Weak mode (no high score)",graduated:"Twice!",graduatedList:"✌️ Hit twice or more: {n} (confirm with cards)",allClear:"🎓 All weak words cleared!",lives3:"✈ 3 lives",lives5:"✈ 5 lives (easy)",easyNote:"Easy mode (no high score)"},
+  zh:{menu:"游戏",sub:"单词射击",best:"最高分",none:"暂无记录",howto:"击中正确的意思！<br>⚡ 越快得分越高",ctrl:"点击屏幕左右（键盘 ← →）",start:"TAP TO START",over:"游戏结束",record:"🏆 刷新最高分！",bestIs:"最高分 ",correct:"正确",combo:"最大连击",miss:"失误",missed:"答错的单词",added:"↑ 已加入待复习列表",perfect:"零失误！",retry:"再玩一次",home:"返回首页",few:"该级别单词太少",paused:"已暂停<br>点击继续",answer:"正确答案",godspeed:"神速！",quick:"快枪手！",sec:"秒",fastest:"最快",modeAll:"全部",modeWeak:"只练弱项（{n}）",weakModeDesc:"只出 {n} 个弱项单词",weakModeTitle:"弱项模式（不计最高分）",graduated:"第2次！",graduatedList:"✌️ 击中2次以上 {n}个（请用卡片确认）",allClear:"🎓 弱项全部毕业！",lives3:"✈ 3条命",lives5:"✈ 5条命（简单）",easyNote:"简单模式（不计最高分）"}
 };
 function gt(k){return (G_TEXT[currentLang]||G_TEXT.ja)[k]||G_TEXT.ja[k];}
 function meaningOf(w){return w.m;}
@@ -681,7 +734,7 @@ function updateGameMenu(){
   const el=document.getElementById("game-menu-title"); if(!el)return;
   el.textContent=gt("menu");
   const b=loadBest()[currentTopik];
-  document.getElementById("game-menu-meta").textContent=gt("sub")+" · "+(b?gt("best")+" "+b.toLocaleString():gt("none"));
+  document.getElementById("game-menu-meta").textContent=b?gt("best")+" "+b.toLocaleString():gt("none");
 }
 
 const G={};  // game state
@@ -689,10 +742,20 @@ const GAME_EXCLUDE_POS={"ことわざ":1,"文法":1};
 
 function gamePool(mode){
   const base=getFiltered();
-  if(mode==="weak")return base.filter(w=>state.weak[K(w)]);
+  if(mode==="weak"){const st=state;return base.filter(w=>st.weak[K(w)]);}
   return base;
 }
 let gameMode="all";
+let gameLives=3;try{gameLives=localStorage.getItem("jpcard_lives")==="5"?5:3;}catch(e){}
+function isEasy(){return gameLives>3;}
+function bestLabel(){return gameMode==="weak"?gt("weakModeDesc").replace("{n}",G.pool.length):isEasy()?gt("easyNote"):"JLPT "+lvName()+" · "+gt("best")+" "+(loadBest()[currentTopik]||0).toLocaleString();}
+function setGameLives(n,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault();}
+  gameLives=n;try{localStorage.setItem("jpcard_lives",String(n));}catch(e){}
+  if(G.phase==="ready"){G.lives=n;updateHud();}
+  document.querySelectorAll(".g-mode[data-lives]").forEach(b=>b.classList.toggle("active",Number(b.dataset.lives)===n));
+  const bestEl=document.querySelector(".g-best");if(bestEl)bestEl.textContent=bestLabel();
+}
 function setGameMode(m,ev){
   if(ev){ev.stopPropagation();ev.preventDefault();}
   if(m==="weak"&&gamePool("weak").length<1)return;
@@ -700,7 +763,7 @@ function setGameMode(m,ev){
   G.pool=shuffle(gamePool(m));G.pi=0;
   document.querySelectorAll(".g-mode").forEach(b=>b.classList.toggle("active",b.dataset.mode===m));
   const bestEl=document.querySelector(".g-best");
-  if(bestEl){const best=loadBest()[currentTopik]||0;bestEl.textContent=m==="weak"?gt("weakModeDesc").replace("{n}",G.pool.length):"JLPT "+lvName()+" · "+gt("best")+" "+best.toLocaleString();}
+  if(bestEl)bestEl.textContent=bestLabel();
 }
 const LOOSE_POS={"挨拶":1,"感動詞":1,"フレーズ":1};
 function meaningParts(m){return m.replace(/\([^)]*\)/g," ").split(/[,、\s]+/).filter(x=>x.length>=1);}
@@ -721,33 +784,52 @@ function pickDistractor(w){
 // ===================== サウンド =====================
 const SND={ctx:null,on:true};
 try{SND.on=localStorage.getItem("jpcard_sound")!=="off";}catch(e){}
+function createAudioCtx(){
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  SND.ctx=new AC();SND.noise=null;SND.dead=false;SND.lastCT=-1;SND.stuckSince=0;
+  const comp=SND.ctx.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;
+  SND.master=SND.ctx.createGain();SND.master.gain.value=0.9;SND.master.connect(comp);comp.connect(SND.ctx.destination);
+  // iPhone：電話・Siri・他アプリ・読み上げなどで割り込まれた後、復帰したらBGMを自動で再開
+  SND.ctx.onstatechange=()=>{try{
+    if(SND.ctx.state==="running"&&SND.on&&!BGM.src&&bgmShouldPlay())startBGM(BGM.song);
+  }catch(e){}};
+}
+function rebuildAudioCtx(){
+  // 音声エンジンが死んだ（時計が止まった）時に作り直す
+  const wasBGM=!!BGM.src||BGM.want;
+  if(BGM.timer){clearInterval(BGM.timer);BGM.timer=null;}BGM.bus=null;BGM.src=null;BGM.srcA=BGM.srcB=null;
+  try{const old=SND.ctx;SND.ctx=null;if(old)old.close();}catch(e){}
+  try{createAudioCtx();}catch(e){}
+  return wasBGM;
+}
 function audioUnlock(){
   try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}   // iPhoneのマナーモードでも鳴らす
   try{
-    if(!SND.ctx){const AC=window.AudioContext||window.webkitAudioContext;if(AC){SND.ctx=new AC();
-      const comp=SND.ctx.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;
-      SND.master=SND.ctx.createGain();SND.master.gain.value=0.9;SND.master.connect(comp);comp.connect(SND.ctx.destination);}}
+    if(!SND.ctx)createAudioCtx();
+    let restart=false;
+    if(SND.ctx&&(SND.dead||SND.ctx.state==="closed")){restart=rebuildAudioCtx();}
     if(SND.ctx&&SND.ctx.state!=="running")SND.ctx.resume();
     if(SND.ctx){const b=SND.ctx.createBuffer(1,1,22050),s=SND.ctx.createBufferSource();s.buffer=b;s.connect(SND.ctx.destination);s.start(0);}
+    if(restart&&bgmShouldPlay())startBGM(BGM.song);
   }catch(e){}
   if(!SND.speechUnlocked){try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u);SND.speechUnlocked=true;}catch(e){}}
 }
-function noiseBuf(){
-  const c=SND.ctx;
-  if(!SND.noise){const n=c.sampleRate*1.5,b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;SND.noise=b;}
-  return SND.noise;
+function noiseBuf(c){
+  c=c||SND.ctx;
+  if(!c._noise){const n=c.sampleRate*1.5,b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;c._noise=b;}
+  return c._noise;
 }
 // t=絶対時刻で鳴らす汎用関数（BGMと効果音で共用）
 function oscAt(t,type,f1,f2,dur,vol,dest,attack){
-  const c=SND.ctx,o=c.createOscillator(),g=c.createGain();
+  const c=dest?dest.context:SND.ctx,o=c.createOscillator(),g=c.createGain();
   o.type=type;o.frequency.setValueAtTime(f1,t);if(f2&&f2!==f1)o.frequency.exponentialRampToValueAtTime(Math.max(f2,1),t+dur);
   g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+(attack||0.006));g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   o.connect(g);g.connect(dest||SND.master);o.start(t);o.stop(t+dur+0.03);
   return o;
 }
 function noiseAt(t,dur,vol,type,f1,f2,dest){
-  const c=SND.ctx,src=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();
-  src.buffer=noiseBuf();fl.type=type;fl.Q.value=0.7;fl.frequency.setValueAtTime(f1,t);if(f2)fl.frequency.exponentialRampToValueAtTime(Math.max(f2,40),t+dur);
+  const c=dest?dest.context:SND.ctx,src=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();
+  src.buffer=noiseBuf(c);fl.type=type;fl.Q.value=0.7;fl.frequency.setValueAtTime(f1,t);if(f2)fl.frequency.exponentialRampToValueAtTime(Math.max(f2,40),t+dur);
   g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   src.connect(fl);fl.connect(g);g.connect(dest||SND.master);src.start(t,Math.random()*0.5);src.stop(t+dur+0.05);
 }
@@ -779,7 +861,7 @@ function speakKo(text){
 }
 
 // ---- BGM（その場で作曲・演奏するシンセポップ。Am→F→C→G）----
-const BGM={timer:null,step:0,next:0,bus:null};
+const BGM={timer:null,bus:null,src:null,bufs:{},rendering:{},want:false,hype:false,song:"shoot"};
 const BGM_BPM=114,BGM_STEP=60/BGM_BPM/4;
 const BGM_CHORDS=[
   {root:110.00,arp:[440.00,523.25,659.25,880.00]},   // Am
@@ -794,30 +876,89 @@ const BGM_MEL=[ // 2小節(32ステップ)ずつのメロディ [ステップ, �
   [[0,880.00],[6,783.99],[8,659.25],[12,523.25],[16,523.25],[20,587.33],[24,659.25],[28,698.46]],
   [[0,783.99],[4,659.25],[8,783.99],[12,1046.50],[16,987.77],[22,880.00],[24,783.99]]
 ];
-function startBGM(){
-  if(!canPlay()||BGM.timer)return;
+// BGMは8小節ぶんを先に音声データとして作り（OfflineAudioContext）、ループ再生する。
+// 25msタイマーで逐次鳴らす方式はiPhoneの割り込み・タイマー抑制で止まることがあったため。
+const BGM_BARS=8,BGM_LEN=BGM_BARS*16*BGM_STEP;
+setTimeout(()=>{try{ensureBGMBuf("shoot");}catch(e){}},1500);   // 起動して少ししたら先に作っておく
+// 今BGMを鳴らすべき場面か（割り込みからの復帰用）
+function bgmShouldPlay(){
+  if(typeof MT!=="undefined"&&MT.active)return true;
+  return typeof G!=="undefined"&&(G.phase==="play"||G.phase==="count"||G.phase==="after")&&!G.paused&&document.getElementById("game").classList.contains("active");
+}
+function songDef(name){
+  return name==="match"?{bars:MT_BARS,step:MT_STEP,len:MT_LEN,fn:mtStep,lpf:3200}:{bars:BGM_BARS,step:BGM_STEP,len:BGM_LEN,fn:bgmStep,lpf:2200};
+}
+function renderBGM(hype,sr,name){
+  const d=songDef(name);
+  const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  const oc=new OAC(1,Math.ceil((d.len+0.6)*sr),sr);
+  const bus=oc.createGain();bus.gain.value=1;bus.connect(oc.destination);
+  const lp=oc.createBiquadFilter();lp.type="lowpass";lp.frequency.value=d.lpf;lp.Q.value=2;lp.connect(bus);
+  for(let st=0;st<d.bars*16;st++)d.fn(st,st*d.step+0.02,{bus,lp,hype});
+  return oc.startRendering();
+}
+function ensureBGMBuf(name){
+  name=name||"shoot";
+  if(BGM.bufs[name]||BGM.rendering[name])return;
+  const sr=SND.ctx?SND.ctx.sampleRate:48000;   // 再生時は自動で変換されるので、実際のレートと違っても問題ない
+  BGM.rendering[name]=true;
+  Promise.all([renderBGM(false,sr,name),renderBGM(true,sr,name)]).then(([a,b])=>{BGM.bufs[name]={sr,a,b};BGM.rendering[name]=false;if(BGM.want&&!BGM.src&&BGM.song===name)startBGM(name);}).catch(e=>{console.error(e);BGM.rendering[name]=false;});
+}
+function startBGM(name){
+  name=name||"shoot";
+  if(BGM.src&&BGM.song!==name)stopBGM(0.15);
+  BGM.song=name;
+  if(!canPlay()||BGM.src)return;
+  BGM.want=true;
+  const c=SND.ctx;
+  const buf=BGM.bufs[name];
+  if(!buf){ensureBGMBuf(name);return;}   // 準備できたら自動で開始
   try{
-    const c=SND.ctx;
-    BGM.bus=c.createGain();BGM.bus.gain.setValueAtTime(0.0001,c.currentTime);BGM.bus.gain.exponentialRampToValueAtTime(0.32,c.currentTime+0.6);
+    const t=c.currentTime+0.05;
+    BGM.bus=c.createGain();BGM.bus.gain.setValueAtTime(0.0001,t);BGM.bus.gain.exponentialRampToValueAtTime(0.32,t+0.6);
     BGM.bus.connect(SND.master);
-    BGM.lp=c.createBiquadFilter();BGM.lp.type="lowpass";BGM.lp.frequency.value=2200;BGM.lp.Q.value=2;BGM.lp.connect(BGM.bus);
-    BGM.step=0;BGM.next=c.currentTime+0.08;
-    BGM.timer=setInterval(bgmTick,25);
-  }catch(e){}
+    BGM.gA=c.createGain();BGM.gB=c.createGain();BGM.gA.gain.value=1;BGM.gB.gain.value=0.0001;
+    BGM.gA.connect(BGM.bus);BGM.gB.connect(BGM.bus);
+    const len=songDef(name).len;
+    const mk=(bf,g)=>{const sN=c.createBufferSource();sN.buffer=bf;sN.loop=true;sN.loopStart=0;sN.loopEnd=len;sN.connect(g);sN.start(t);return sN;};
+    BGM.srcA=mk(buf.a,BGM.gA);BGM.srcB=mk(buf.b,BGM.gB);
+    BGM.src=true;BGM.hype=false;
+    SND.lastCT=-1;SND.stuckSince=0;
+    if(BGM.timer)clearInterval(BGM.timer);BGM.timer=setInterval(bgmWatch,500);
+  }catch(e){console.error(e);BGM.src=null;}
 }
 function stopBGM(fade){
+  BGM.want=false;
   if(BGM.timer){clearInterval(BGM.timer);BGM.timer=null;}
-  if(BGM.bus&&SND.ctx){try{const t=SND.ctx.currentTime;BGM.bus.gain.cancelScheduledValues(t);BGM.bus.gain.setValueAtTime(BGM.bus.gain.value,t);BGM.bus.gain.exponentialRampToValueAtTime(0.0001,t+(fade||0.3));const b=BGM.bus;setTimeout(()=>{try{b.disconnect();}catch(e){}},((fade||0.3)+0.1)*1000);}catch(e){}}
-  BGM.bus=null;
+  if(BGM.src&&SND.ctx){try{const c=SND.ctx,t=c.currentTime,f=fade||0.3;
+    BGM.bus.gain.cancelScheduledValues(t);BGM.bus.gain.setValueAtTime(Math.max(BGM.bus.gain.value,0.0001),t);BGM.bus.gain.exponentialRampToValueAtTime(0.0001,t+f);
+    const a=BGM.srcA,b=BGM.srcB,bus=BGM.bus;
+    try{a.stop(t+f+0.05);b.stop(t+f+0.05);}catch(e){}
+    setTimeout(()=>{try{bus.disconnect();}catch(e){}},(f+0.2)*1000);}catch(e){}}
+  BGM.src=null;BGM.bus=null;BGM.srcA=BGM.srcB=null;
 }
-function bgmTick(){
-  if(!canPlay()||!BGM.bus){stopBGM();return;}
-  const c=SND.ctx;
-  while(BGM.next<c.currentTime+0.12){bgmStep(BGM.step,BGM.next);BGM.next+=BGM_STEP;BGM.step++;}
+function bgmSetHype(h){
+  if(!BGM.src||BGM.hype===h||!SND.ctx)return;
+  BGM.hype=h;
+  try{const t=SND.ctx.currentTime;
+    BGM.gA.gain.cancelScheduledValues(t);BGM.gA.gain.setValueAtTime(Math.max(BGM.gA.gain.value,0.0001),t);BGM.gA.gain.exponentialRampToValueAtTime(h?0.0001:1,t+0.4);
+    BGM.gB.gain.cancelScheduledValues(t);BGM.gB.gain.setValueAtTime(Math.max(BGM.gB.gain.value,0.0001),t);BGM.gB.gain.exponentialRampToValueAtTime(h?1:0.0001,t+0.4);
+  }catch(e){}
 }
-function bgmStep(step,t){
+// 監視：音声エンジンの時計が止まっていたら再開を試み、3秒以上戻らなければ次のタップで作り直す
+function bgmWatch(){
+  if(!canPlay()||!BGM.src){if(BGM.timer){clearInterval(BGM.timer);BGM.timer=null;}return;}
+  const c=SND.ctx,now=performance.now();
+  if(c.currentTime===SND.lastCT){
+    if(!SND.stuckSince)SND.stuckSince=now;
+    else{try{c.resume();}catch(e){}if(now-SND.stuckSince>3000)SND.dead=true;}
+    return;
+  }
+  SND.lastCT=c.currentTime;SND.stuckSince=0;
+}
+function bgmStep(step,t,env){
   try{
-    const s=step%16,bar=Math.floor(step/16),ch=BGM_CHORDS[bar%4],bus=BGM.bus,hype=(G.combo||0)>=5;
+    const s=step%16,bar=Math.floor(step/16),ch=BGM_CHORDS[bar%4],bus=env.bus,hype=env.hype;
     // キック
     if(s%4===0){oscAt(t,"sine",130,42,0.22,s===0?0.55:0.42,bus,0.003);}
     // ハイハット
@@ -828,11 +969,11 @@ function bgmStep(step,t){
     if([0,3,6,8,10,11,14].includes(s)){const f=(s===6||s===14)?ch.root*2:ch.root;oscAt(t,"triangle",f,0,BGM_STEP*1.6,0.30,bus,0.005);}
     // アルペジオ
     const af=ch.arp[BGM_ARP[s]]*(hype?2:1);
-    oscAt(t,"square",af,0,BGM_STEP*0.9,0.035,BGM.lp,0.003);
+    oscAt(t,"square",af,0,BGM_STEP*0.9,0.035,env.lp,0.003);
     // パッド
     if(s===0){[ch.arp[0]/2,ch.arp[1]/2,ch.arp[2]/2].forEach((f,i)=>{oscAt(t,"triangle",f*(1+(i-1)*0.002),0,BGM_STEP*16,0.045,bus,0.25);});}
-    // メロディ（5小節目から、ベルの音色）
-    if(bar>=4){const ph=BGM_MEL[Math.floor(bar/2)%4],s32=(bar%2)*16+s;
+    // メロディ（ベルの音色）
+    {const ph=BGM_MEL[Math.floor(bar/2)%4],s32=(bar%2)*16+s;
       ph.forEach(([st,f])=>{if(st===s32){oscAt(t,"sine",f,0,0.55,0.075,bus,0.005);oscAt(t,"sine",f*2.01,0,0.25,0.015,bus,0.005);}});}
   }catch(e){}
 }
@@ -840,19 +981,19 @@ function bgmStep(step,t){
 function toggleSound(){
   SND.on=!SND.on;try{localStorage.setItem("jpcard_sound",SND.on?"on":"off");}catch(e){}
   updateSoundBtn();
-  if(SND.on){audioUnlock();sfx("beep");if(G.phase==="play"||G.phase==="after"||G.phase==="count")startBGM();}
+  if(SND.on){audioUnlock();sfx("beep");if(bgmShouldPlay())startBGM(BGM.song);}
   else{try{speechSynthesis.cancel();}catch(e){}stopBGM(0.1);}
 }
-function updateSoundBtn(){const b=document.getElementById("g-sound");if(b)b.textContent=SND.on?"🔊":"🔇";}
+function updateSoundBtn(){["g-sound","m-sound"].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent=SND.on?"🔊":"🔇";});}
 
 // ===================== ゲーム進行 =====================
 function startGame(){
-  audioUnlock();updateSoundBtn();stopBGM(0.1);
+  audioUnlock();updateSoundBtn();stopBGM(0.1);try{ensureBGMBuf("shoot");}catch(e){}
   if(gameMode==="weak"&&gamePool("weak").length<1)gameMode="all";
   const pool=gamePool(gameMode);
   if(pool.length<(gameMode==="weak"?1:2)){alert(gt("few"));return;}
   Object.assign(G,{
-    pool:shuffle(pool),pi:0,qn:0,score:0,shownScore:0,lives:3,combo:0,maxCombo:0,correct:0,missed:[],
+    pool:shuffle(pool),pi:0,qn:0,score:0,shownScore:0,lives:gameLives,combo:0,maxCombo:0,correct:0,missed:[],
     speed:0.085,phase:"ready",q:null,shipX:0.5,shipTarget:0.5,shipV:0,bullet:null,particles:[],rings:[],floaters:[],debris:[],
     flash:null,last:0,paused:false,banner:null,fastest:0,shake:0,muzzle:0,shieldHit:0,time:0,hits:{},graduated:[]
   });
@@ -868,8 +1009,12 @@ function startGame(){
       <button class="g-mode${gameMode==="all"?" active":""}" data-mode="all" onpointerdown="setGameMode('all',event)">${gt("modeAll")}</button>
       <button class="g-mode${gameMode==="weak"?" active":""}${nWeak<1?" off":""}" data-mode="weak" onpointerdown="setGameMode('weak',event)">${gt("modeWeak").replace("{n}",nWeak)}</button>
     </div>
+    <div class="g-modes lives">
+      <button class="g-mode${gameLives===3?" active":""}" data-lives="3" onpointerdown="setGameLives(3,event)">${gt("lives3")}</button>
+      <button class="g-mode${gameLives===5?" active":""}" data-lives="5" onpointerdown="setGameLives(5,event)">${gt("lives5")}</button>
+    </div>
     <div class="g-ctrl">${gt("ctrl")}</div>
-    <div class="g-best">${gameMode==="weak"?gt("weakModeDesc").replace("{n}",pool.length):"JLPT "+lvName()+" · "+gt("best")+" "+best.toLocaleString()}</div>
+    <div class="g-best">${bestLabel()}</div>
     <div class="g-start">${gt("start")}</div>`);
   G.phase="ready";
   if(!G.raf) G.raf=requestAnimationFrame(gameLoop);
@@ -896,7 +1041,7 @@ function nextQuestion(){
 }
 
 function updateHud(){
-  document.getElementById("g-lives").innerHTML=[0,1,2].map(i=>`<span class="life${i<G.lives?"":" lost"}">✈</span>`).join("");
+  document.getElementById("g-lives").innerHTML=Array.from({length:Math.max(gameLives,G.lives||0)},(_,i)=>i).map(i=>`<span class="life${i<G.lives?"":" lost"}">✈</span>`).join("");
 }
 
 function shoot(side){
@@ -907,7 +1052,7 @@ function shoot(side){
   G.q.reactT=G.q.t;   // 早撃ち判定はタップした瞬間の時間で
   G.bullet={side,x:G.shipTarget,y:0.83,fireAt:0.08,trail:[]};
   audioUnlock();sfx("shot");
-  if(side===G.q.correctSide) speakKo(G.q.w.r);   // iPhoneはタップの瞬間でないと発音できない
+  speakKo(G.q.w.r);   // 正解でも不正解でも発音（iPhoneはタップの瞬間でないと発音できない）
 }
 
 const SIDE_COL=[{main:"#ff6ec7",glow:"255,110,199"},{main:"#5ef2ff",glow:"94,242,255"}];
@@ -918,7 +1063,7 @@ function resolve(side,timeout){
   const S=gameSize();
   const ex=(i)=>({x:laneX(i)*S.w,y:enemyY(q.y)*S.h});
   if(ok){
-    G.combo++;G.maxCombo=Math.max(G.maxCombo,G.combo);G.correct++;
+    G.combo++;G.maxCombo=Math.max(G.maxCombo,G.combo);G.correct++;bgmSetHype(G.combo>=5);
     if(gameMode==="weak"){const k=K(q.w);G.hits[k]=(G.hits[k]||0)+1;
       if(G.hits[k]===2&&!G.graduated.includes(q.w)){G.graduated.push(q.w);const gp=ex(side);G.floaters.push({x:gp.x,y:gp.y-44,text:gt("graduated"),sub:"",t:0,color:"#4ade80"});}}
     // 早撃ちボーナス：タップまでの秒数が短いほど大きい（最大+400）
@@ -937,7 +1082,7 @@ function resolve(side,timeout){
     G.speed=Math.min(G.speed*1.045,0.32);
     G.phase="after";G.afterT=0;G.afterDur=0.6;
   }else{
-    G.combo=0;G.lives--;
+    G.combo=0;G.lives--;bgmSetHype(false);
     if(!G.missed.includes(q.w)) G.missed.push(q.w);
     if(!timeout){explode(ex(side),"#ff5577",0.7);}
     q.hit=-1;q.showCorrect=true;
@@ -964,12 +1109,12 @@ function endGame(){
   const st=state;
   G.missed.forEach(w=>{st.weak[K(w)]=(st.weak[K(w)]||0)+1;delete st.mastered[K(w)];delete st.perfect[K(w)];});
   if(G.missed.length) saveState();
-  const best=loadBest();const prev=best[currentTopik]||0;const isRecord=gameMode!=="weak"&&G.score>prev;
+  const best=loadBest();const prev=best[currentTopik]||0;const isRecord=gameMode!=="weak"&&!isEasy()&&G.score>prev;
   if(isRecord){best[currentTopik]=G.score;saveBest(best);}
   document.getElementById("go-title").textContent=gt("over");
   document.getElementById("go-score").textContent=G.score.toLocaleString();
   const rec=document.getElementById("go-record");rec.textContent=gt("record");rec.style.display=isRecord&&G.score>0?"inline-block":"none";
-  document.getElementById("go-best").textContent=gameMode==="weak"?gt("weakModeTitle"):"JLPT "+lvName()+" · "+gt("bestIs")+Math.max(prev,G.score).toLocaleString();
+  document.getElementById("go-best").textContent=gameMode==="weak"?gt("weakModeTitle"):isEasy()?gt("easyNote"):"JLPT "+lvName()+" · "+gt("bestIs")+Math.max(prev,G.score).toLocaleString();
   document.getElementById("go-correct").textContent=G.correct;
   document.getElementById("go-combo").textContent=G.maxCombo;
   document.getElementById("go-fast").innerHTML=G.fastest?G.fastest.toFixed(2)+'<small style="font-size:11px;margin-left:1px">'+gt("sec")+'</small>':"-";
@@ -984,8 +1129,7 @@ function endGame(){
   if(G.missed.length){
     box.innerHTML=`<h4>${gt("missed")}</h4>`+G.missed.map(w=>`<div class="row"><b>${esc(w.w)}${w.r!==w.w?" <small style=\"opacity:.7;font-weight:600\">"+esc(w.r)+"</small>":""}</b><span>${esc(meaningOf(w))}</span></div>`).join("")+`<div class="note">${gt("added")}</div>`;
   }else box.innerHTML=`<h4>${gt("perfect")}</h4>`;
-  const wrow=w=>`<div class="row"><b>${esc(w.w)}${w.r!==w.w?" <small style=\"opacity:.7;font-weight:600\">"+esc(w.r)+"</small>":""}</b><span>${esc(meaningOf(w))}</span></div>`;
-  if(G.graduated&&G.graduated.length){box.innerHTML+=`<h4 style="margin-top:12px;color:#4ade80">${gt("graduatedList").replace("{n}",G.graduated.length)}</h4>`+G.graduated.map(wrow).join("");}
+  if(G.graduated&&G.graduated.length){box.innerHTML+=`<h4 style="margin-top:12px;color:#4ade80">${gt("graduatedList").replace("{n}",G.graduated.length)}</h4>`+G.graduated.map(w=>`<div class="row"><b>${esc(w.w)}${w.r!==w.w?" <small style=\"opacity:.7;font-weight:600\">"+esc(w.r)+"</small>":""}</b><span>${esc(meaningOf(w))}</span></div>`).join("");}
   showScreen("gameover");
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
@@ -1056,7 +1200,7 @@ function stepGame(dt){
         b.trail.push({x:b.x,y:b.y});if(b.trail.length>9)b.trail.shift();
         if(b.y<=enemyY(q.y)+0.045){G.bullet=null;resolve(b.side,false);return;}}
     }
-    if(q.y>=1){G.bullet=null;resolve(-1,true);}
+    if(q.y>=1){G.bullet=null;resolve(-1,true);speakKo(q.w.r);}   // 時間切れも発音を試みる
   }else if(G.phase==="after"){
     G.afterT+=dt;
     G.q.fade=G.q.fade.map((f,i)=>i===G.q.hit?f:Math.max(0,f-dt*(G.q.showCorrect&&i===G.q.correctSide?0:2.5)));
@@ -1299,7 +1443,7 @@ function drawEffects(ctx){
     ctx.textAlign="center";ctx.textBaseline="middle";ctx.font=`900 28px -apple-system,sans-serif`;
     ctx.lineWidth=5;ctx.strokeStyle="rgba(60,20,90,0.9)";ctx.strokeText(f.text,0,0);
     ctx.fillStyle=f.color;ctx.fillText(f.text,0,0);
-    if(f.sub){ctx.font=`800 15px ${JP_FONT}`;ctx.lineWidth=4;ctx.strokeText(f.sub,0,26);ctx.fillStyle="#ffffff";ctx.fillText(f.sub,0,26);}
+    if(f.sub){ctx.font=`800 15px ${KO_FONT}`;ctx.lineWidth=4;ctx.strokeText(f.sub,0,26);ctx.fillStyle="#ffffff";ctx.fillText(f.sub,0,26);}
     ctx.restore();
   });
 }
@@ -1391,6 +1535,7 @@ function drawGame(){
   });
 })();
 
+
 // ===================== 単語力テスト（日本語版・簡易） =====================
 const VT_KEY="jpcard_vtest_v1";
 const VT_TOTAL=50,VT_TIME=5,VT_TIME_LISTEN=7,VT_LISTEN_RATE=0.2;
@@ -1406,6 +1551,12 @@ const VT_T={menu:"단어력 테스트",meta:"50문제로 지금의 단어력 체
   again:"다시 보기",home:"홈으로",history:"지금까지의 기록",few:"단어가 부족합니다",
   lv:["보강 필요","조금 더","합격 라인","충분"],bestLine:"최고 {p}% ({n} 라인)",lastShort:"지난번 {p}%",newBest:"🏆 최고 기록 갱신!",bestIs:"최고 {p}%"};
 function vtt(k){return VT_T[k];}
+// イージーモード：問題の単語にひらがなを付ける（記録は通常と別）
+let vtEasy=false;try{vtEasy=localStorage.getItem("jpcard_vt_easy")==="1";}catch(e){}
+function setVTEasy(on){vtEasy=on;try{localStorage.setItem("jpcard_vt_easy",on?"1":"0");}catch(e){}
+  document.querySelectorAll(".vt-mode").forEach(b=>b.classList.toggle("active",(b.dataset.easy==="1")===on));
+  const r=document.getElementById("vt-easy-rule");if(r)r.style.display=on?"block":"none";}
+const isEasyRec=r=>!!r.easy;
 function loadVT(){try{return JSON.parse(localStorage.getItem(VT_KEY))||[];}catch(e){return [];}}
 function saveVT(h){try{localStorage.setItem(VT_KEY,JSON.stringify(h.slice(-50)));}catch(e){}}
 const VT={};
@@ -1424,13 +1575,15 @@ function vtChoices(w){
 function updateVTMenu(){
   const t=document.getElementById("vt-menu-title");if(!t)return;
   const tg=vtTarget();
-  const h=loadVT().filter(r=>r.target===tg);const last=h[h.length-1];
+  const all=loadVT().filter(r=>r.target===tg);
+  const norm=all.filter(r=>!isEasyRec(r));const h=norm.length?norm:all;const last=h[h.length-1];
+  const tag=!norm.length&&all.length?" (쉬움)":"";
   const meta=document.getElementById("vt-menu-meta");
   const icon=document.querySelector(".vt-btn .icon");
   if(!last){meta.textContent=vtt("meta");if(icon){icon.className="icon icon-vt";icon.innerHTML="📊";icon.removeAttribute("style");}return;}
   const best=Math.max(...h.map(r=>r.ready));
   const c=best>=90?"#4ade80":best>=75?"#ffd76a":best>=55?"#fb923c":"#fb7185";
-  meta.innerHTML=`<span class="vt-best">🏆 ${vtt("bestLine").replace("{n}",tg).replace("{p}",best)}</span>${h.length>1?` <span class="vt-lastm">${vtt("lastShort").replace("{p}",last.ready)}</span>`:""}`;
+  meta.innerHTML=`<span class="vt-best">🏆 ${vtt("bestLine").replace("{n}",tg).replace("{p}",best)}${tag}</span>${h.length>1?` <span class="vt-lastm">${vtt("lastShort").replace("{p}",last.ready)}</span>`:""}`;
   if(icon){icon.className="icon vt-ring-mini";icon.style.setProperty("--p",best);icon.style.setProperty("--c",c);icon.innerHTML=`<span>${best}<small>%</small></span>`;}
 }
 function openVTest(){
@@ -1438,7 +1591,11 @@ function openVTest(){
   intro.innerHTML=`<div class="vt-badge">📊</div>
     <h2>${vtt("introTitle")}</h2>
     <p class="vt-line">${vtt("introLine").replace("{n}",vtTarget())}</p>
-    <div class="vt-rules"><p>✓ ${vtt("intro1")}</p><p>⏱ ${vtt("intro2")}</p><p>${vtt("intro3")}</p></div>
+    <div class="vt-modes">
+      <button class="vt-mode${vtEasy?"":" active"}" data-easy="0" onclick="setVTEasy(false)">보통</button>
+      <button class="vt-mode${vtEasy?" active":""}" data-easy="1" onclick="setVTEasy(true)">쉬움 (히라가나 표시)</button>
+    </div>
+    <div class="vt-rules"><p>✓ ${vtt("intro1")}</p><p>⏱ ${vtt("intro2")}</p><p>${vtt("intro3")}</p><p id="vt-easy-rule" style="display:${vtEasy?"block":"none"}">あ 쉬움 모드: 단어에 히라가나가 붙습니다 (기록은 보통 모드와 따로)</p></div>
     <button class="done-btn white" onclick="startVTest()">${vtt("start")}</button>
     <button class="done-btn danger" onclick="goHome()">${vtt("home")}</button>`;
   intro.style.display="flex";document.getElementById("vt-q").style.display="none";
@@ -1457,12 +1614,12 @@ function startVTest(){
   const order=shuffle(qs);
   const nListen=Math.round(order.length*VT_LISTEN_RATE);
   order.forEach((q,i)=>{q.listen=i<nListen;q.choices=vtChoices(q.w);});
-  Object.assign(VT,{tg,lvs,qs:shuffle(order),i:-1,res:[],timer:null,t0:0,answered:false,active:true,run:(VT.run||0)+1});
+  Object.assign(VT,{tg,lvs,qs:shuffle(order),i:-1,res:[],timer:null,t0:0,answered:false,easy:vtEasy,active:true,run:(VT.run||0)+1});
   document.getElementById("vt-intro").style.display="none";
   document.getElementById("vt-q").style.display="flex";
   vtNext();
 }
-function vtWordHtml(w){return `<div class="vt-ko">${esc(w.w)}</div>`;}
+function vtWordHtml(w,withReading){return `<div class="vt-ko">${esc(w.w)}</div>`+(withReading&&w.r!==w.w?`<div class="vt-reading">${esc(w.r)}</div>`:"");}
 function vtNext(){
   clearInterval(VT.timer);
   if(!VT.active)return;
@@ -1479,7 +1636,7 @@ function vtNext(){
     const qi=VT.i;
     setTimeout(()=>{if(VT.i===qi&&!VT.started&&!VT.answered){const b=document.getElementById("vt-play");if(b){b.classList.add("big");b.textContent="🔊 "+vtt("tapPlay");}}},900);
   }else{
-    word.innerHTML=vtWordHtml(q.w);
+    word.innerHTML=vtWordHtml(q.w,VT.easy);
   }
   const box=document.getElementById("vt-choices");box.innerHTML="";
   q.choices.forEach((c,ci)=>{
@@ -1515,7 +1672,7 @@ function vtAnswer(ci){
   VT.res.push({w:q.w,lv:q.lv,listen:q.listen,kind});
   document.querySelectorAll("#vt-choices .vt-choice").forEach((b,bi)=>{b.disabled=true;if(bi===correctIdx)b.classList.add("ok");else if(bi===ci)b.classList.add("ng");});
   // 答えた後は表記と読みを見せる
-  document.getElementById("vt-word").innerHTML=vtWordHtml(q.w)+(q.w.r!==q.w.w?`<div class="vt-reading">${esc(q.w.r)}</div>`:"");
+  document.getElementById("vt-word").innerHTML=vtWordHtml(q.w,true);
   try{if(kind==="r")sfx("beep");}catch(e){}
   const run=VT.run;setTimeout(()=>{if(VT.active&&VT.run===run)vtNext();},kind==="r"?450:1100);
 }
@@ -1532,9 +1689,9 @@ function vtFinish(){
   lvs.forEach(l=>knownTotal+=pHat[l]*sizes[l]);
   const R=VT.res.filter(r=>r.kind==="r").length,W=VT.res.filter(r=>r.kind==="w").length,S=VT.res.length-R-W;
   const L=VT.res.filter(r=>r.listen),La=L.filter(r=>r.kind==="r").length;
-  const hist=loadVT();const mine=hist.filter(h=>h.target===tg);const prev=mine[mine.length-1];
+  const hist=loadVT();const mine=hist.filter(h=>h.target===tg&&isEasyRec(h)===!!VT.easy);const prev=mine[mine.length-1];
   const prevBest=mine.reduce((m,h)=>Math.max(m,h.ready),-1);
-  const rec={t:Date.now(),target:tg,ready:lines[tg],lines,known:Math.round(knownTotal),r:R,w:W,s:S};
+  const rec={t:Date.now(),target:tg,easy:!!VT.easy,ready:lines[tg],lines,known:Math.round(knownTotal),r:R,w:W,s:S};
   hist.push(rec);saveVT(hist);
   const missed=VT.res.filter(r=>r.kind!=="r").map(r=>r.w);
   missed.forEach(w=>{const k=K(w);state.weak[k]=(state.weak[k]||0)+1;delete state.mastered[k];delete state.perfect[k];});
@@ -1548,13 +1705,13 @@ function vtFinish(){
   const res=document.getElementById("vresult");
   res.innerHTML=`<h2>${vtt("resTitle")}</h2>
     <div class="vt-ring" style="--p:${rec.ready};--c:${col(rec.ready)}"><div class="vt-ring-in"><div class="vt-pct">${rec.ready}<small>%</small></div><div class="vt-lvl" style="color:${col(rec.ready)}">${lvLabel(rec.ready)}</div></div></div>
-    <div class="vt-sub">${vtt("readiness").replace("{n}",tg)}</div>
+    <div class="vt-sub">${vtt("readiness").replace("{n}",tg)}${VT.easy?`<span class="vt-easy-tag">쉬움</span>`:""}</div>
     ${prevBest>=0&&rec.ready>prevBest?`<div class="vt-newbest">${vtt("newBest")}</div>`:""}
     <div class="vt-delta">${diff===null?vtt("first"):vtt("prev").replace("{d}",(diff>=0?"+":"")+diff+"%")}${prevBest>=0?" ・ "+vtt("bestIs").replace("{p}",allBest):""}</div>
     <div class="vt-card">${bars}<div class="vt-known">${vtt("known").replace("{k}",rec.known.toLocaleString())}</div>
       <div class="vt-detail">${vtt("detail").replace("{r}",R).replace("{w}",W).replace("{s}",S)}${L.length?" ・ "+vtt("listenAcc").replace("{a}",La).replace("{b}",L.length):""}</div></div>
     ${missed.length?`<div class="go-missed"><h4>${vtt("missed")}</h4>${missed.map(w=>`<div class="row"><b>${esc(w.w)}${w.r!==w.w?` <small style="opacity:.7;font-weight:600">${esc(w.r)}</small>`:""}</b><span>${esc(meaningOf(w))}</span></div>`).join("")}<div class="note">${vtt("added")}</div></div>`:""}
-    <div class="vt-card"><h4 class="vt-h4">${vtt("history")}</h4>${histRows}</div>
+    <div class="vt-card"><h4 class="vt-h4">${vtt("history")}${VT.easy?" (쉬움)":""}</h4>${histRows}</div>
     <p class="vt-note">${vtt("note")}</p>
     <button class="done-btn white" onclick="openVTest()">${vtt("again")}</button>
     <button class="done-btn white" onclick="goHome()">${vtt("home")}</button>`;
