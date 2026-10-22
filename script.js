@@ -42,3 +42,12 @@ if (PORTFOLIO_URL) {
 document.querySelectorAll('[data-portfolio-link][aria-disabled="true"]').forEach(link => {
   link.addEventListener('click', event => event.preventDefault());
 });
+
+
+// AI相談の入口。入力済みの相談文は保持します。
+document.querySelectorAll('[data-ai-contact]').forEach(link => {
+  link.addEventListener('click', () => {
+    const message = form.elements.namedItem('message');
+    if (!message.value.trim()) message.value = 'AI動画制作・導入支援について相談したいです。\n\n現在の課題：\n希望する支援：';
+  });
+});

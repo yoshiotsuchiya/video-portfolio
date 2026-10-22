@@ -132,3 +132,7 @@ Chatwork ID・所在地の詳細・メールアドレスの直接表示は削除
 ## 現在の公開先
 
 https://hiroshi-design.com/ （GitHub Pages＋独自ドメイン）。`CNAME` は独自ドメインを指定するファイルです。更新時も削除せず、公開フォルダーの直下に置いてください。手元の編集はGitHubへアップロードするまで公開サイトに反映されません。
+
+
+## AI動画制作・導入支援（2026年10月追加）
+トップの画像付きバナーは index.html の ai-banner、サービス本文は id="ai-support" から編集できます。図版は assets/ai-workflow.svg、バナー画像は assets/hero-lens.webp です。相談ボタンは入力済みの文章を保持し、未入力の場合だけAI相談の文面を入れます。
