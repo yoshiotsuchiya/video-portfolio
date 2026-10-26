@@ -136,3 +136,6 @@ https://hiroshi-design.com/ （GitHub Pages＋独自ドメイン）。`CNAME` �
 
 ## AI動画制作・導入支援（2026年10月追加）
 トップの画像付きバナーは index.html の ai-banner、サービス本文は id="ai-support" から編集できます。図版は assets/ai-workflow.svg、バナー画像は assets/hero-lens.webp です。相談ボタンは入力済みの文章を保持し、未入力の場合だけAI相談の文面を入れます。
+
+## 写真付きサービス（2026年10月26日）
+6枚の写真は assets/services/ にあります。本文は index.html の service-photo-grid から編集できます。新しい写真に替える場合は出典と利用条件を assets/IMAGE-CREDITS.md に記録してください。画像は遅延読み込みされ、PC3列・タブレット2列・スマートフォン1列で表示します。
