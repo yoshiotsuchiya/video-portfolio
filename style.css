@@ -66,3 +66,8 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:24px;pa
 .recommended-plan:hover .recommended-link{background:#3d493c}
 @media(max-width:900px){.recommended-plan{align-items:stretch;flex-direction:column;gap:22px}.recommended-action{border-left:0;border-top:1px solid #9a865e;padding:18px 0 0}.recommended-link{max-width:340px}}
 @media(max-width:760px){.recommended-plan{padding:22px 18px}.recommended-copy>strong{font-size:25px}.recommended-action>strong{font-size:34px}.recommended-link{max-width:none}}
+
+/* 制作本数は補足情報として控えめに表示 */
+.hero-proof{font-size:13px;color:#c2c9c0;gap:10px;margin:18px 0}
+.hero-proof strong{font-size:22px;font-weight:500;line-height:1.5}
+.hero-proof strong span{font-size:13px;margin-left:5px}
