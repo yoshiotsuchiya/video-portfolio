@@ -48,3 +48,8 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:24px;pa
 .service-image-note{font-size:13px;color:#555e51;margin-top:26px}.service-image-note a{text-decoration:underline;text-underline-offset:4px}
 @media(min-width:761px) and (max-width:1050px){.service-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.service-photo-grid{grid-template-columns:1fr;gap:30px}.service-photo-link h3{font-size:22px;margin-top:15px}.service-photo-card .service-tags{margin-top:12px}.service-image-note{line-height:1.8}}
+
+/* トップのAI導入支援メッセージ */
+.ai-banner strong{font-size:clamp(24px,2.5vw,36px);line-height:1.55;margin:6px 0 10px}
+.ai-banner img{width:120px;height:120px}
+@media(max-width:760px){.ai-banner{flex-wrap:wrap}.ai-banner img{width:58px;height:78px}.ai-banner>div{flex:1;min-width:0}.ai-banner strong{font-size:22px}.ai-banner p{font-size:14px}.ai-banner-arrow{display:none}}
