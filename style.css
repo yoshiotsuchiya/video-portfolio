@@ -67,7 +67,12 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:24px;pa
 @media(max-width:900px){.recommended-plan{align-items:stretch;flex-direction:column;gap:22px}.recommended-action{border-left:0;border-top:1px solid #9a865e;padding:18px 0 0}.recommended-link{max-width:340px}}
 @media(max-width:760px){.recommended-plan{padding:22px 18px}.recommended-copy>strong{font-size:25px}.recommended-action>strong{font-size:34px}.recommended-link{max-width:none}}
 
-/* 制作本数は補足情報として控えめに表示 */
-.hero-proof{font-size:13px;color:#c2c9c0;gap:10px;margin:18px 0}
-.hero-proof strong{font-size:22px;font-weight:500;line-height:1.5}
-.hero-proof strong span{font-size:13px;margin-left:5px}
+/* 制作実績の帯は補足の案内としてコンパクトに */
+.works-section{padding-top:24px;padding-bottom:24px;background:#f7f8f4;gap:24px}
+.works-section .display-heading{font-size:22px;font-weight:600;line-height:1.5}
+.works-section .eyebrow{font-size:11px;color:#676b5f}
+.works-bottom>p{font-size:14px;line-height:1.75}
+.works-bottom .confidential-note{font-size:12px;margin-top:8px}
+.works-link{font-size:14px;font-weight:500;margin-top:12px;padding-top:12px}
+.works-link small{font-size:12px}.works-link .circle-arrow{font-size:22px}
+@media(max-width:760px){.works-section{gap:8px;padding-top:22px;padding-bottom:22px}.works-section .display-heading{font-size:20px}}
