@@ -1,0 +1,55 @@
+/* 確認用サービスページ専用。既存ページのスタイルは変更しません。 */
+.pack-preview{background:#fff;color:#20231f}
+.pack-container{width:min(1120px,calc(100% - 48px));margin-inline:auto}
+.pack-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px max(24px,calc((100vw - 1120px)/2));border-bottom:1px solid #ddd}
+.pack-brand{font-size:25px;font-weight:700;white-space:nowrap}.pack-brand span{font:italic 26px Georgia,serif}
+.preview-label{font-size:12px;color:#655329;border:1px solid #cdbd9d;padding:4px 10px;white-space:nowrap}
+.pack-hero{background:#171c19;color:#fff;padding:64px 0 48px}
+.pack-eyebrow{font-size:13px;letter-spacing:.08em;font-weight:700;color:#79602e;margin-bottom:12px}
+.pack-hero .pack-eyebrow{color:#d1bb8c}
+.pack-hero h1{font-size:clamp(29px,4vw,49px);line-height:1.5;letter-spacing:.015em}
+.pack-lead{font-size:clamp(22px,2.5vw,30px);line-height:1.6;color:#e2cfa5;margin-top:26px}
+.pack-summary{font-size:17px;line-height:1.95;color:#e2e6df;margin-top:20px}
+.pack-specs{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}
+.pack-specs span{border:1px solid #7a816f;padding:6px 14px;font-size:14px}
+.pack-hero-note{max-width:800px;color:#e2e6df;line-height:1.9;margin-bottom:24px}
+.draft-note{font-size:12px;color:#d0d6cc;margin-top:16px}
+.pack-section{padding-top:56px;padding-bottom:56px}
+.pack-section h2{font-size:clamp(25px,2.8vw,34px);line-height:1.5;margin-bottom:26px}
+.pack-band{background:#f5f4ef}
+.use-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.use-grid article{border-top:2px solid #b99e65;padding-top:16px}
+.item-number{font-size:14px;color:#79602e}
+.use-grid h3{font-size:20px;line-height:1.6;margin:10px 0}
+.use-grid p,.section-intro{color:#50564f}
+.included-list{padding:0;margin:22px 0 0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:0 36px}
+.included-list li{padding:13px 0;border-bottom:1px solid #d9dcd3;display:flex;gap:12px}
+.included-list li:before{content:"✓";color:#79602e;font-weight:700}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.plan{border:1px solid #cbd0c5;padding:30px;background:#fff}
+.plan-featured{border-top:4px solid #a88b51;background:#faf8f1;padding-top:27px}
+.plan-kicker{font-size:13px;font-weight:700;letter-spacing:.12em;color:#79602e}
+.plan h3{font-size:26px;margin:12px 0}
+.plan-description{min-height:60px;color:#50564f}
+.plan-price{font-size:clamp(36px,4vw,50px);font-weight:700;letter-spacing:-.03em;line-height:1.4;padding:20px 0}
+.plan-price span{font-size:16px;font-weight:500;letter-spacing:0;margin-left:8px;display:inline-block}
+.plan-includes{font-weight:700;border-top:1px solid #d9dcd3;padding-top:18px}
+.plan ul{padding-left:22px;line-height:1.9}.plan li+li{margin-top:10px}.plan small{font-size:14px;color:#50564f}
+.plan-note{font-size:14px;color:#50564f;margin-top:20px}
+.pricing-note{font-size:12px;color:#565f51;margin-top:20px}
+.pack-flow{list-style:none;padding:0;margin:0}
+.pack-flow li{display:flex;gap:24px;padding:20px 0;border-bottom:1px solid #d9dcd3}
+.pack-flow li>span{font-size:24px;color:#79602e;min-width:36px}
+.pack-flow h3{font-size:20px;margin-bottom:6px}.pack-flow p{color:#50564f}
+.pack-terms{margin:0}.pack-terms>div{display:grid;grid-template-columns:280px 1fr;gap:28px;padding:22px 0;border-top:1px solid #d9dcd3}
+.pack-terms dt{font-weight:700}.pack-terms dd{margin:0;color:#50564f}
+.pack-footer{background:#171c19;color:#e2e6df;padding:24px max(24px,calc((100vw - 1120px)/2));display:flex;justify-content:space-between;gap:16px}
+.pack-footer p,.pack-footer a{font-size:13px;color:inherit}
+@media(max-width:760px){
+.pack-container{width:calc(100% - 40px)}.pack-header{padding:16px 20px}.pack-brand{font-size:22px}.pack-brand span{font-size:23px}.preview-label{font-size:11px;padding:3px 7px}
+.pack-hero{padding:36px 0}.pack-hero h1{font-size:29px;overflow-wrap:anywhere}.pack-summary{font-size:16px}.desktop-break{display:none}.pack-specs{gap:8px}.pack-specs span{font-size:13px;padding:5px 10px}
+.pack-section{padding-top:40px;padding-bottom:40px}.use-grid,.plan-grid,.included-list{grid-template-columns:1fr}.use-grid{gap:24px}.plan{padding:24px 20px}.plan-featured{padding-top:21px}.plan h3{font-size:24px}.plan-price{font-size:42px}.plan-description{min-height:0}
+.pack-terms>div{grid-template-columns:1fr;gap:8px}.pack-flow li{gap:16px}.pack-footer{padding:22px 20px}
+}
+/* キーボード操作時のみ本文へのスキップリンクを表示 */
+.pack-preview .skip-link:not(:focus){clip-path:inset(50%);width:1px;height:1px;padding:0;overflow:hidden;white-space:nowrap}
