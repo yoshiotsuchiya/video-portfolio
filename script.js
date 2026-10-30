@@ -32,9 +32,11 @@ if (PORTFOLIO_URL) {
       link.removeAttribute('aria-disabled');
       link.setAttribute('aria-label', '制作実績を見る（別タブで開く）');
     });
-    document.querySelector('[data-portfolio-caption]').textContent = '別タブで開きます';
+    const caption = document.querySelector('[data-portfolio-caption]');
+    if (caption) caption.textContent = '別タブで開きます';
   } catch {
-    document.querySelector('[data-portfolio-caption]').textContent = '実績サイトのリンク先を確認中です';
+    const caption = document.querySelector('[data-portfolio-caption]');
+    if (caption) caption.textContent = '実績サイトのリンク先を確認中です';
   }
 }
 
