@@ -80,3 +80,16 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:24px;pa
 /* 写真なしのプロフィール：見出しと本文の幅を調整 */
 .about{grid-template-columns:minmax(220px,.65fr) minmax(0,1.35fr);gap:48px;align-items:start}
 @media(max-width:760px){.about{grid-template-columns:1fr;gap:24px}}
+
+/* トップの2つのサービス案内。塗り分けを使わず、余白と罫線で整理 */
+.hero-offerings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin-top:40px;border-top:1px solid #51594d}
+.hero-offering{display:flex;flex-direction:column;align-items:flex-start;padding:28px 36px 12px 0;min-width:0}
+.hero-offering+ .hero-offering{padding-left:36px;padding-right:0;border-left:1px solid #394336;margin-top:28px;padding-top:0}
+.offering-label{color:#d1bb8c;font-size:12px;letter-spacing:.1em;font-weight:500}
+.hero-offering h2{font-size:clamp(22px,2.1vw,30px);font-weight:500;line-height:1.5;letter-spacing:.015em;margin:12px 0}
+.hero-offering p{color:#c8cfc5;font-size:15px;line-height:1.9;margin-bottom:22px}
+.offering-link{display:inline-flex;align-items:center;gap:24px;font-size:14px;color:#e6dac2;margin-top:auto;padding:4px 0;border-bottom:1px solid #7f775e}
+.offering-link>span{font-size:20px;line-height:1}
+.hero-offering:hover .offering-link{color:#fff;border-color:#e6dac2}
+.hero-offering:focus-visible{outline:2px solid #d1bb8c;outline-offset:6px}
+@media(max-width:760px){.hero-offerings{grid-template-columns:1fr;margin-top:30px}.hero-offering{padding:24px 0}.hero-offering+.hero-offering{border-left:0;border-top:1px solid #394336;margin-top:0;padding:24px 0 8px}.hero-offering h2{font-size:23px}.hero-offering p{font-size:15px;margin-bottom:16px}.hero-offering p br{display:none}}
