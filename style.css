@@ -76,3 +76,18 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:24px;pa
 .works-link{font-size:14px;font-weight:500;margin-top:12px;padding-top:12px}
 .works-link small{font-size:12px}.works-link .circle-arrow{font-size:22px}
 @media(max-width:760px){.works-section{gap:8px;padding-top:22px;padding-bottom:22px}.works-section .display-heading{font-size:20px}}
+
+/* 写真を省き、トップを中央揃えの文字中心のレイアウトに */
+.hero-layout{display:block;max-width:900px;margin:0 auto}
+.hero-copy{text-align:center;padding:14px 0 22px}
+.hero .eyebrow{letter-spacing:.2em}
+.response-tag{font-size:clamp(36px,4.1vw,56px);margin:18px 0 22px}
+.hero h1{font-size:clamp(31px,3.8vw,52px);line-height:1.5}
+.hero-description{margin-top:20px}
+.hero-proof{justify-content:center;margin:24px 0 20px}
+.hero-proof strong{font-size:40px}
+.hero .actions{display:flex;justify-content:center}
+.hero .actions .button{min-width:220px}
+.hero-note{margin-top:14px}
+@media(max-width:760px){.hero-copy{padding:4px 0 10px}.response-tag{font-size:36px;margin:14px 0 18px}.hero h1{font-size:30px}.hero-description{font-size:16px}.hero-proof{gap:12px;margin:20px 0}.hero-proof strong{font-size:34px}.hero .actions .button{font-size:15px;padding:14px 22px}.hero-note{font-size:12px}}
+@media(max-width:360px){.hero h1{font-size:27px}.response-tag{font-size:33px}}
