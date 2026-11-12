@@ -112,3 +112,6 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:24px;pa
 /* サービス内容を伝える導入文も大きく */
 .hero-message .message-intro{font-size:clamp(28px,2.8vw,40px);line-height:1.6;letter-spacing:0;margin-bottom:16px;text-wrap:balance}
 @media(max-width:760px){.hero-message .message-intro{font-size:clamp(25px,6.8vw,34px);line-height:1.6}}
+
+/* AI支援の相談料金目安 */
+.offering-price-note{display:block;font-size:14px;line-height:1.8;color:#e2cfa5;margin:-8px 0 20px}
