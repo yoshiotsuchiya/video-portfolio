@@ -93,3 +93,18 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:24px;pa
 .hero-offering:hover .offering-link{color:#fff;border-color:#e6dac2}
 .hero-offering:focus-visible{outline:2px solid #d1bb8c;outline-offset:6px}
 @media(max-width:760px){.hero-offerings{grid-template-columns:1fr;margin-top:30px}.hero-offering{padding:24px 0}.hero-offering+.hero-offering{border-left:0;border-top:1px solid #394336;margin-top:0;padding:24px 0 8px}.hero-offering h2{font-size:23px}.hero-offering p{font-size:15px;margin-bottom:16px}.hero-offering p br{display:none}}
+
+/* 大見出しは明朝体、説明・操作部はゴシック体。外部フォント通信は不要。 */
+:root{--display-font:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif CJK JP","MS PMincho",serif}
+.section h2,.hero-offering h2,.ai-service-grid h3,.ai-consult h3,.art-caption p,
+.pack-hero h1,.pack-lead,.pack-section h2,.plan h3{font-family:var(--display-font);font-weight:600}
+.hero-copy{min-width:0}
+.hero .response-tag{font-size:clamp(23px,2.3vw,32px);letter-spacing:.07em;margin:16px 0 22px}
+.hero h1.hero-message{font-family:var(--display-font);font-weight:600;letter-spacing:.025em;line-height:1.25}
+.message-intro{display:block;font-size:clamp(19px,2vw,28px);line-height:1.65;margin-bottom:14px;letter-spacing:.015em}
+.message-concern{display:block;font-size:clamp(38px,4.5vw,64px);line-height:1.35}
+.message-answer{display:block;width:fit-content;color:#e2cfa5;font-size:clamp(45px,5.3vw,76px);line-height:1.35;padding-bottom:8px;border-bottom:1px solid #8d7a55}
+.message-mark{font-size:.8em}
+.hero-supporting-copy{font-size:16px;line-height:1.8;color:#e1e5dc;margin-top:22px}
+.hero-description{font-size:15px;margin-top:10px;color:#c6cec2}
+@media(max-width:760px){.hero .response-tag{font-size:24px;margin:14px 0 24px}.message-intro{font-size:clamp(17px,4.8vw,24px)}.message-concern{font-size:clamp(38px,10vw,54px)}.message-answer{font-size:clamp(45px,12vw,66px)}.hero-supporting-copy{font-size:14px;margin-top:18px}.hero-description{font-size:14px}}
