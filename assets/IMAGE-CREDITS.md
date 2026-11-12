@@ -29,3 +29,6 @@ Prompt: Expand the square photograph to 3:2 by adding outdoor background on the 
 - services/editing.jpg — Peter Stumpf: https://unsplash.com/photos/Q2-OEzSZY94
 - services/ai.webp — OpenAI image generationによる制作風景のコンセプト画像。実案件・本人・実在の制作拠点を示すものではありません。
 写真は幅960pxで取得。生成画像の編集用原本は案件フォルダ直下のai-service-original.png。
+
+## スタッフ紹介動画パックの人物イメージ
+- services/staff-introduction-portrait.webp: OpenAI画像生成。架空の社員の横顔。実在の顧客・出演者・制作実績を示すものではありません。編集用原本は案件フォルダ直下 staff-introduction-portrait-original.png。

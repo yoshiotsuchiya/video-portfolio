@@ -53,3 +53,15 @@
 }
 /* キーボード操作時のみ本文へのスキップリンクを表示 */
 .pack-preview .skip-link:not(:focus){clip-path:inset(50%);width:1px;height:1px;padding:0;overflow:hidden;white-space:nowrap}
+
+/* スタッフ紹介のイメージ写真をトップ右側に配置 */
+.pack-hero-layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:48px;align-items:center}
+.pack-hero-copy{min-width:0}
+.pack-hero-layout h1{font-size:clamp(28px,3vw,39px);line-height:1.6}
+.pack-hero-layout .pack-lead{font-size:clamp(21px,2.2vw,27px)}
+.pack-hero-layout .desktop-break{display:none}
+.pack-portrait{margin:0;min-width:0}
+.pack-portrait img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 35%;border-radius:6px}
+.pack-portrait figcaption{text-align:right;font-size:11px;color:#c3cabb;margin-top:9px;letter-spacing:.03em}
+@media(max-width:760px){.pack-hero-layout{grid-template-columns:1fr;gap:30px}.pack-hero-layout h1{font-size:29px}.pack-portrait{width:100%;max-width:420px;margin:0 auto}.pack-portrait img{aspect-ratio:4/3;object-position:50% 30%}}
+@media(max-width:360px){.pack-hero-layout h1{font-size:26px}}
