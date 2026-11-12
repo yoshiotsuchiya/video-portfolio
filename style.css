@@ -108,3 +108,7 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:24px;pa
 .hero-supporting-copy{font-size:16px;line-height:1.8;color:#e1e5dc;margin-top:22px}
 .hero-description{font-size:15px;margin-top:10px;color:#c6cec2}
 @media(max-width:760px){.hero .response-tag{font-size:24px;margin:14px 0 24px}.message-intro{font-size:clamp(17px,4.8vw,24px)}.message-concern{font-size:clamp(38px,10vw,54px)}.message-answer{font-size:clamp(45px,12vw,66px)}.hero-supporting-copy{font-size:14px;margin-top:18px}.hero-description{font-size:14px}}
+
+/* サービス内容を伝える導入文も大きく */
+.hero-message .message-intro{font-size:clamp(28px,2.8vw,40px);line-height:1.6;letter-spacing:0;margin-bottom:16px;text-wrap:balance}
+@media(max-width:760px){.hero-message .message-intro{font-size:clamp(25px,6.8vw,34px);line-height:1.6}}
